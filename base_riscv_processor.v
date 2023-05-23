@@ -91,6 +91,15 @@ module InstructionMemory (
       mem[3] <= 32'b01000000001100110000001110110011; //r-format Sub: X7 <= X6 - X3
       mem[4] <= 32'b00000000100100010000000010010011; //l-format Addi: X1 <= X2 + 9
       mem[5] <= 32'b00000000101000011000001010010011; //l-format Subi: X5 <= X3 - 10 nota: nossa ula inverte o número passado pra ela dentro de seu próprio funcionamento, portanto passamos o valor do immediate em módulo.
+      // Branch functions (SB-format)
+      mem[6] <= 32'b00000110000100000100100001100111; //beq
+      mem[7] <= 32'b00000110000100000100100001100111; //bne
+      mem[8] <= 32'b00000110000100000110000001100111; //blt
+      mem[9] <= 32'b00000110000100000101000001100111; //bge
+      mem[10] <=32'b00000110000100000111000001100111; //bltu
+      mem[11] <=32'b00000110000100000111100001100111; //bgeu
+      
+
       if (we) begin
         mem[address] = entrada;
       end
@@ -194,6 +203,12 @@ module ULA (
   input [`NBITS-1:0] B,
   input input_subtrator,
   output [`NBITS-1:0] resultado,
+  output BEQ,
+  output BNE,
+  output BGE,
+  output BGEU,
+  output BLT,
+  output BLTU,
   output overflow
 );
 wire [`NBITS-1:0] B_final;
@@ -201,6 +216,14 @@ wire [`NBITS-1:0] lista_carryOut;
 
 assign B_final = (B != `NBITS'b0 && input_subtrator == 1) ? ~B : B;
 
+assign BEQ = (A == B) ? 1 : 0;
+assign BNE = ~BEQ;
+
+assign BLT = (A < B_final) ? 1 : 0;
+assign BGE = ~BLT;
+
+assign BLTU = (A < B) ? 1 : 0;
+assign BGEU = ~BLTU;
 
 full_adder UUT(
     .NA(A),
@@ -226,8 +249,6 @@ module Mux_2 (
 
 endmodule
 
-
-
 //------------datapath---------
 
 module datapath(
@@ -235,16 +256,25 @@ module datapath(
   input load_PC,
   input load_IR,
   input [63:0] PCres,
+  input [63:0] somador_PC,
   input [4:0] Rw,
   input [4:0] Ra, Rb,
   input [63:0] entrada_mux_add_sub,
   input decisor0,
   input decisor1,
   input decisor2,
+  input decisor3,
   input somador_subtrator,
+  output BEQ,
+  output BNE,
+  output BGE,
+  output BLT,
+  output BGEU,
+  output BLTU,
   output [63:0] douta_saida,
   output [63:0] data_ram,
-  output [31:0] saida_IR
+  output [31:0] saida_IR,
+  output [31:0] saida_MI
 );
 
   wire [63:0] din;
@@ -256,18 +286,25 @@ module datapath(
   wire [63:0] doutb;
 
   wire [63:0] entrada_ula_load_store;
+  wire [63:0] endereco_MUX_PC;
   wire [63:0] entrada_ula_add;
+  wire [63:0] entrada_pc;
 
   wire [63:0] saida_ula;
 
   wire overflow;
 
-  registrador PC(.load(load_PC), .clk(clk), .entrada(PCres), .saida(enderecoIM));
+  Mux_2 MUX_PC(.S0(PCres), .S1(endereco_MUX_PC), .decisor(decisor3), .S(entrada_pc));
+
+  full_adder somador(.NA(somador_PC), .NB(enderecoIM), .carryIn(1'd0), .soma_total(endereco_MUX_PC), .lista_carryOut());
+
+  registrador PC(.load(load_PC), .clk(clk), .entrada(entrada_pc), .saida(enderecoIM));
 
   InstructionMemory MI(.we(we_mi), .entrada(32'd0), .address(enderecoIM), .saida(fio_MI), .clk(clk));
 
+  assign saida_MI = fio_MI;
+
   registrador32b IR(.load(load_IR), .clk(clk), .entrada(fio_MI), .saida(saida_IR));
-  
   
   RF rf( .we(we), .Rw(Rw), .Ra(Ra), .Rb(Rb), .din(din), .douta(douta), .doutb(doutb), .clk(clk) ); //instancia o RF
 
@@ -275,8 +312,7 @@ module datapath(
 
   Mux_2 mux_load_store(.S0(doutb), .S1(douta), .decisor(decisor1), .S(entrada_ula_load_store)); // decisor = 1 devolve douta, enquanto decisor = 0 devolve doutb
 
-  ULA soma(.A(entrada_ula_load_store), .B(entrada_ula_add), .input_subtrator(somador_subtrator), .resultado(saida_ula), .overflow(overflow)); //instancia a ULA
-
+  ULA soma(.A(entrada_ula_load_store), .B(entrada_ula_add), .input_subtrator(somador_subtrator), .resultado(saida_ula), .overflow(overflow), .BEQ(BEQ), .BNE(BNE), .BGE(BGE), .BLT(BLT), .BGEU(BGEU), .BLTU(BLTU)); //instancia a ULA
   ram RAM(.we(we_ram), .entrada(douta), .address(saida_ula), .saida(dout_ram), .clk(clk)); //instancia a memória
 
   Mux_2 mux_din(.S0(saida_ula), .S1(dout_ram), .decisor(decisor2), .S(din));
@@ -300,16 +336,25 @@ module testbench;
   reg load_PC;
   reg load_IR;
   reg [63:0] PCres;
+  reg [63:0] somador_PC;
   reg [4:0] Rw;
   reg [4:0] Ra, Rb; //Ra, rb são utilizados pra acessar o endereço dos registradores do RF, cuja conteúdo é exposto por douta e doutb
   reg [63:0] entrada_mux_add_sub;
   reg decisor0;
   reg decisor1;
   reg decisor2;
+  reg decisor3;
   reg decisor_somador_subtrator;
   wire [63:0] douta_saida; //contém conteúdo do registrador acessado por Ra
   wire [63:0] data_ram; //contém conteúdo do elemento de memória acessado pela saída da ULA, que é o resultado da soma
   wire [31:0] saida_IR;
+  wire [31:0] saida_MI;
+  wire BEQ;
+  wire BNE;
+  wire BGE;
+  wire BLT;
+  wire BGEU;
+  wire BLTU;
     
   datapath dph(
   .we(we), .clk(clk), .we_ram(we_ram), .we_mi(we_mi),
@@ -320,10 +365,14 @@ module testbench;
   .decisor0(decisor0),
   .decisor1(decisor1),
   .decisor2(decisor2),
+  .decisor3(decisor3),
   .somador_subtrator(decisor_somador_subtrator),
   .douta_saida(douta_saida),
   .data_ram(data_ram),
-  .saida_IR(saida_IR)
+  .saida_IR(saida_IR),
+  .BEQ(BEQ), .BGE(BGE), .BNE(BNE), .BLT(BLT),
+  .BGEU(BGEU), .BLTU(BLTU), .saida_MI(saida_MI),
+  .somador_PC(somador_PC)
 );
 
     initial begin
@@ -334,11 +383,13 @@ module testbench;
       Ra = 5'd0;
       Rw = 5'd0;
       Rb = 5'd0;
+      somador_PC = 64'd1;
       decisor_somador_subtrator = 0;
       entrada_mux_add_sub = 64'd0;
       decisor0 = 0;
       decisor1 = 0;
       decisor2 = 0;
+      decisor3 = 0;
       
       //--------------Exemplos de LOAD------------------------   
       //-----------load mem(X0 + 0) em X2 -> X2 <= mem(0)-------------
@@ -358,7 +409,7 @@ module testbench;
       #10 we = 0;
       Ra = Rw;  //fazendo isso para expor o conteúdo do registrador loadado em douta_saida
       #10  $display("registrador X2 = %d", douta_saida);
-      
+
        //--------load (X0 + 1) em X4 -> X4 <= mem(1)--------
       #10;
       Ra = 5'd0;
@@ -376,10 +427,50 @@ module testbench;
       #10  $display("registrador X4 = %d", douta_saida);
       $display("----------LOAD EXAMPLES END----------");
       
-      //---------------Exemplo de ADDI e SUBI---------------
-      $display("\n---------ADDI START---------");
-      
+      $display("\n---------BNE START---------");
       //descobrir IR
+      #10;
+      load_PC = 1;
+      PCres = 64'd7;
+      #10;
+      load_PC = 0;
+      
+      #10;
+      load_IR = 1;
+      #10;
+      $display("conteúdo de IR = %b", saida_IR);
+      load_IR = 0;
+
+      //---------Leitura BNE---------------
+      Ra = 5'd2;
+      Rb = 5'd4;
+
+      decisor0 = 0;
+      decisor1 = 1;
+
+      #10 $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
+      if  (BNE == 1) begin
+        somador_PC = saida_IR [31:25];
+      end 
+      else begin
+        somador_PC = 64'd1;
+      end
+
+      #10;
+      decisor3 = 1;
+      #10;
+      load_PC = 1;
+      #10;
+      load_PC = 0;
+      #10;
+      $display("PC = PC + imediatoBNE = %b", saida_MI); //a saída esperada é a da informação de BLTU contida na memória, já que o immediate do bne é 0000011
+      $display("\n---------BNE FINISH---------");
+
+
+       //---------------Exemplo de ADDI e SUBI---------------
+      $display("\n---------ADDI START---------");
+      //descobrir IR
+      decisor3 = 0;
       #10;
       load_PC = 1;
       PCres = 64'd4;
@@ -391,7 +482,8 @@ module testbench;
       #10;
       $display("conteúdo de IR = %b", saida_IR);
       load_IR = 0;
-      
+
+
       //---------------addi X1 = X2 + 9 = 12 + 9-------------
       Ra = 5'd2;
       Rw = 5'd1;
@@ -407,23 +499,27 @@ module testbench;
       
       Ra = 5'd1; //para expor o conteúdo de X1
       #10 $display("Conteúdo de X1 após addi (X1 <= X2 + 9) = %d", douta_saida);
+      #10 $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
       
       $display("------------ADDI END------------\n");
-      
-      
       
       //decidindo ir
       $display("-----------SUBI START---------");
       
       #10;
-      load_PC = 1;
-      PCres = 64'd5;
+      somador_PC = 64'd1;
+      decisor3 = 1;
       #10;
+      load_PC = 1;
+      // PCres = 64'd5;
+      #10;
+      decisor3 = 0;
       load_PC = 0;
       
       #10;
       load_IR = 1;
       #10;
+      $display("conteúdo de IR = %b", saida_IR);
       load_IR = 0;
       
       //-------subi X3 <= X4 - 10 = 11 - 10------
@@ -432,7 +528,6 @@ module testbench;
       Rw = 5'd3;
       
       entrada_mux_add_sub = saida_IR[31:20];
-      $display("valor do immediate = %d", entrada_mux_add_sub);
       
       #10 decisor_somador_subtrator = 1;
       
@@ -445,6 +540,7 @@ module testbench;
       #10 we = 0;
       #10 Ra = 5'd3;
       #10 $display("valor de X3 após subi (X3 <= X4 - 10) = %d", douta_saida);
+      #10  $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
       
       $display("------------SUBI END----------\n");
       
@@ -465,6 +561,7 @@ module testbench;
       #10 we = 0;
       #10 Ra = 5'd6;
       #10 $display("valor de X6 após add (X6 <= X4 + X2) = %d", douta_saida);
+      #10  $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
       
       $display("---------ADD END---------\n");
       
@@ -484,6 +581,7 @@ module testbench;
       #10 we = 0;
       #10 Ra = 5'd7;
       #10 $display("valor de X7 após sub(X7 <= X6 - X3 ) = %d", douta_saida);
+      #10  $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
       $display("---------SUB END---------\n");
       
       //----------Store de X7 into mem(2)-------------
@@ -500,6 +598,7 @@ module testbench;
       #10 we_ram = 1;
       #10 we_ram = 0;
       #10 $display("valor de mem(2) após store (mem(2) <= X7) = %d", data_ram);
+      #10  $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
       $display("---------STORE END---------\n");
       
       $finish;
@@ -508,5 +607,3 @@ module testbench;
     always #5 clk = ~clk;
 
 endmodule
-
-

@@ -87,15 +87,15 @@ module InstructionMemory (
       //mem[0] <= 32'b00000000000000000011000010000011; //l-format Load: mem(0) => X1
       //mem[1] <= 32'b00000000000000010011000010000011; //load 
 
-      mem[0] <= 32'b00000000000000000011000010100011; //s-format Store: X0 -> mem(0+1)
+      //mem[0] <= 32'b00000000000000000011000010100011; //s-format Store: X0 -> mem(0+1)
       
       //mem[2] <= 32'b00000000010000010000001100110011;
-      mem[3] <= 32'b00000000000100010000001100110011;   //r-format Add: X6 <= X2 + X4
+      //mem[3] <= 32'b00000000000100010000001100110011;   //r-format Add: X6 <= X2 + X4
       //mem[3] <= 32'b01000000001100110000001110110011; //r-format Sub: X7 <= X6 - X3
-      //mem[4] <= 32'b00000000100100010000000010010011; //l-format Addi: X1 <= X2 + 9
+      //mem[0] <= 32'b00000000100100000000000010010011; //l-format Addi: X1 <= X0 + 9
       //mem[5] <= 32'b00000000101000011000001010010011; //l-format Subi: X5 <= X3 - 10 nota: nossa ula inverte o número passado pra ela dentro de seu próprio funcionamento, portanto passamos o valor do immediate em módulo.
       // Branch functions (SB-format)
-      //mem[6] <= 32'b00000110000100000100100001100111; //beq
+      mem[0] <= 32'b00000110000100000100100001100111; //beq
       //mem[7] <= 32'b00000110000100000100100001100111; //bne
       //mem[8] <= 32'b00000110000100000110000001100111; //blt
       //mem[9] <= 32'b00000110000100000101000001100111; //bge
@@ -457,6 +457,12 @@ module uc(
           selEx <= 3'b010; 
         end
 
+        if(saida_MI[6:0] == 7'b0010011)// addi
+        begin
+          sel <= 2'b10; 
+          selEx <= 3'b000;
+        end
+
       end
 
       2'b10: //ex
@@ -517,14 +523,36 @@ module uc(
           sel = 2'b11;
           end
 
-          3'b011: 
+          3'b011: //Addi
           begin
+          somador_subtrator = 0;
+          we = 1;
+          
+          //ajuste dos MUX
+          decisor0 = 1;
+          decisor1 = 1;
+          decisor2 = 0;
+          decisor5 = 1;
 
-            sel = 2'b11;
+          Ra = saida_MI[19:15];
+          entrada_mux_add_sub = saida_MI[31:20];
+          Rw = saida_MI[11:7]; //salva o resultado da operação no endereço Rw
+  
+          sel <= 2'b11;
           end
 
-          3'b100: 
+          3'b100: //BEQ
           begin
+            decisor0 = 0;
+            decisor1 = 1;
+            decisor4 = 1;
+            decisor3 = 1;
+            decisor6 = 0;
+            we_pc = 1;
+
+            Ra = saida_MI;
+            Rb = saida_MI;
+            imm_PC = saida_MI;
             sel = 2'b11;
           end
 

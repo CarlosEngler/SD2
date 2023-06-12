@@ -9,42 +9,42 @@ module RF(we, clk, Rw, Ra, Rb, din, douta, doutb);
     wire [63:0] reg_outputs [0:31];
 
     // banco de registradores
-    registrador X0(.clk(clk), .load((we && Rw == 0)), .entrada(din), .saida(reg_outputs[0]));
-    registrador X1(.clk(clk), .load((we && Rw == 1)), .entrada(din), .saida(reg_outputs[1]));
-    registrador X2(.clk(clk), .load((we && Rw == 2)), .entrada(din), .saida(reg_outputs[2]));
-    registrador X3(.clk(clk), .load((we && Rw == 3)), .entrada(din), .saida(reg_outputs[3]));
-    registrador X4(.clk(clk), .load((we && Rw == 4)), .entrada(din), .saida(reg_outputs[4]));
-    registrador X5(.clk(clk), .load((we && Rw == 5)), .entrada(din), .saida(reg_outputs[5]));
-    registrador X6(.clk(clk), .load((we && Rw == 6)), .entrada(din), .saida(reg_outputs[6]));
-    registrador X7(.clk(clk), .load((we && Rw == 7)), .entrada(din), .saida(reg_outputs[7]));
-    registrador X8(.clk(clk), .load((we && Rw == 8)), .entrada(din), .saida(reg_outputs[8]));
-    registrador X9(.clk(clk), .load((we && Rw == 9)), .entrada(din), .saida(reg_outputs[9]));
-    registrador X10(.clk(clk), .load((we && Rw == 10)), .entrada(din), .saida(reg_outputs[10]));
-    registrador X11(.clk(clk), .load((we && Rw == 11)), .entrada(din), .saida(reg_outputs[11]));
-    registrador X12(.clk(clk), .load((we && Rw == 12)), .entrada(din), .saida(reg_outputs[12]));
-    registrador X13(.clk(clk), .load((we && Rw == 13)), .entrada(din), .saida(reg_outputs[13]));
-    registrador X14(.clk(clk), .load((we && Rw == 14)), .entrada(din), .saida(reg_outputs[14]));
-    registrador X15(.clk(clk), .load((we && Rw == 15)), .entrada(din), .saida(reg_outputs[15]));
-    registrador X16(.clk(clk), .load((we && Rw == 16)), .entrada(din), .saida(reg_outputs[17]));
-    registrador X17(.clk(clk), .load((we && Rw == 17)), .entrada(din), .saida(reg_outputs[17]));
-    registrador X18(.clk(clk), .load((we && Rw == 18)), .entrada(din), .saida(reg_outputs[18]));
-    registrador X19(.clk(clk), .load((we && Rw == 19)), .entrada(din), .saida(reg_outputs[19]));
-    registrador X20(.clk(clk), .load((we && Rw == 20)), .entrada(din), .saida(reg_outputs[20]));
-    registrador X21(.clk(clk), .load((we && Rw == 21)), .entrada(din), .saida(reg_outputs[21]));
-    registrador X22(.clk(clk), .load((we && Rw == 22)), .entrada(din), .saida(reg_outputs[22]));
-    registrador X23(.clk(clk), .load((we && Rw == 23)), .entrada(din), .saida(reg_outputs[23]));
-    registrador X24(.clk(clk), .load((we && Rw == 24)), .entrada(din), .saida(reg_outputs[24]));
-    registrador X25(.clk(clk), .load((we && Rw == 25)), .entrada(din), .saida(reg_outputs[25]));
-    registrador X26(.clk(clk), .load((we && Rw == 26)), .entrada(din), .saida(reg_outputs[26]));
-    registrador X27(.clk(clk), .load((we && Rw == 27)), .entrada(din), .saida(reg_outputs[27]));
-    registrador X28(.clk(clk), .load((we && Rw == 28)), .entrada(din), .saida(reg_outputs[28]));
-    registrador X29(.clk(clk), .load((we && Rw == 29)), .entrada(din), .saida(reg_outputs[29]));
-    registrador X30(.clk(clk), .load((we && Rw == 30)), .entrada(din), .saida(reg_outputs[30]));
-    registrador X31(.clk(clk), .load((we && Rw == 31)), .entrada(din), .saida(reg_outputs[31]));
+    registrador X0(.clk(clk), .load((we && Rw == 0)), .entrada(din), .reset(1'b1), .saida(reg_outputs[0]));
+    registrador X1(.clk(clk), .load((we && Rw == 1)), .entrada(din), .reset(1'b0), .saida(reg_outputs[1]));
+    registrador X2(.clk(clk), .load((we && Rw == 2)), .entrada(din), .reset(1'b0), .saida(reg_outputs[2]));
+    registrador X3(.clk(clk), .load((we && Rw == 3)), .entrada(din), .reset(1'b0), .saida(reg_outputs[3]));
+    registrador X4(.clk(clk), .load((we && Rw == 4)), .entrada(din), .reset(1'b0), .saida(reg_outputs[4]));
+    registrador X5(.clk(clk), .load((we && Rw == 5)), .entrada(din), .reset(1'b0), .saida(reg_outputs[5]));
+    registrador X6(.clk(clk), .load((we && Rw == 6)), .entrada(din), .reset(1'b0), .saida(reg_outputs[6]));
+    registrador X7(.clk(clk), .load((we && Rw == 7)), .entrada(din), .reset(1'b0), .saida(reg_outputs[7]));
+    registrador X8(.clk(clk), .load((we && Rw == 8)), .entrada(din), .reset(1'b0), .saida(reg_outputs[8]));
+    registrador X9(.clk(clk), .load((we && Rw == 9)), .entrada(din), .reset(1'b0), .saida(reg_outputs[9]));
+    registrador X10(.clk(clk), .load((we && Rw == 10)), .entrada(din), .reset(1'b0), .saida(reg_outputs[10]));
+    registrador X11(.clk(clk), .load((we && Rw == 11)), .entrada(din), .reset(1'b0), .saida(reg_outputs[11]));
+    registrador X12(.clk(clk), .load((we && Rw == 12)), .entrada(din), .reset(1'b0), .saida(reg_outputs[12]));
+    registrador X13(.clk(clk), .load((we && Rw == 13)), .entrada(din), .reset(1'b0), .saida(reg_outputs[13]));
+    registrador X14(.clk(clk), .load((we && Rw == 14)), .entrada(din), .reset(1'b0), .saida(reg_outputs[14]));
+    registrador X15(.clk(clk), .load((we && Rw == 15)), .entrada(din), .reset(1'b0), .saida(reg_outputs[15]));
+    registrador X16(.clk(clk), .load((we && Rw == 16)), .entrada(din), .reset(1'b0), .saida(reg_outputs[17]));
+    registrador X17(.clk(clk), .load((we && Rw == 17)), .entrada(din), .reset(1'b0), .saida(reg_outputs[17]));
+    registrador X18(.clk(clk), .load((we && Rw == 18)), .entrada(din), .reset(1'b0), .saida(reg_outputs[18]));
+    registrador X19(.clk(clk), .load((we && Rw == 19)), .entrada(din), .reset(1'b0), .saida(reg_outputs[19]));
+    registrador X20(.clk(clk), .load((we && Rw == 20)), .entrada(din), .reset(1'b0), .saida(reg_outputs[20]));
+    registrador X21(.clk(clk), .load((we && Rw == 21)), .entrada(din), .reset(1'b0), .saida(reg_outputs[21]));
+    registrador X22(.clk(clk), .load((we && Rw == 22)), .entrada(din), .reset(1'b0), .saida(reg_outputs[22]));
+    registrador X23(.clk(clk), .load((we && Rw == 23)), .entrada(din), .reset(1'b0), .saida(reg_outputs[23]));
+    registrador X24(.clk(clk), .load((we && Rw == 24)), .entrada(din), .reset(1'b0), .saida(reg_outputs[24]));
+    registrador X25(.clk(clk), .load((we && Rw == 25)), .entrada(din), .reset(1'b0), .saida(reg_outputs[25]));
+    registrador X26(.clk(clk), .load((we && Rw == 26)), .entrada(din), .reset(1'b0), .saida(reg_outputs[26]));
+    registrador X27(.clk(clk), .load((we && Rw == 27)), .entrada(din), .reset(1'b0), .saida(reg_outputs[27]));
+    registrador X28(.clk(clk), .load((we && Rw == 28)), .entrada(din), .reset(1'b0), .saida(reg_outputs[28]));
+    registrador X29(.clk(clk), .load((we && Rw == 29)), .entrada(din), .reset(1'b0), .saida(reg_outputs[29]));
+    registrador X30(.clk(clk), .load((we && Rw == 30)), .entrada(din), .reset(1'b0), .saida(reg_outputs[30]));
+    registrador X31(.clk(clk), .load((we && Rw == 31)), .entrada(din), .reset(1'b0), .saida(reg_outputs[31]));
 
     //retorna o valor referente ao endereco Ra e Rb
-    assign douta = (Ra == 0) ? 64'd0 : reg_outputs[Ra];
-    assign doutb = (Rb == 0) ? 64'd0 : reg_outputs[Rb];
+    assign douta = reg_outputs[Ra];
+    assign doutb = reg_outputs[Rb];
 
 endmodule
 
@@ -84,20 +84,27 @@ module InstructionMemory (
   reg [31:0] mem [31:0];    
    
     always @(posedge clk) begin
-      mem[0] <= 32'b00000000000000000011000000000011; //l-format Load:
-      mem[1] <= 32'b00000000000000000011000000100011; //s-format Store:
-      mem[2] <= 32'b00000000010000010000001100110011; //r-format Add: X6 <= X2 + X4
-      mem[3] <= 32'b01000000001100110000001110110011; //r-format Sub: X7 <= X6 - X3
-      mem[4] <= 32'b00000000100100010000000010010011; //l-format Addi: X1 <= X2 + 9
-      mem[5] <= 32'b00000000101000011000001010010011; //l-format Subi: X5 <= X3 - 10 nota: nossa ula inverte o número passado pra ela dentro de seu próprio funcionamento, portanto passamos o valor do immediate em módulo.
+      mem[0] <= 32'b00000000000000000 011 00001 0000011; //l-format Load:
+      mem[1] <= 32'b00000000000000000 011 00010 0000011; //load X2<=mem(1 + 0)
+      //mem[1] <= 32'b00000000000000000011000000100011; //s-format Store:
+      //mem[2] <= 32'b00000000010000010000001100110011;
+        mem[3] <= 32'b00000000000100010000001100110011;   //r-format Add: X6 <= X2 + X4
+      //mem[3] <= 32'b01000000001100110000001110110011; //r-format Sub: X7 <= X6 - X3
+      //mem[4] <= 32'b00000000100100010000000010010011; //l-format Addi: X1 <= X2 + 9
+      //mem[5] <= 32'b00000000101000011000001010010011; //l-format Subi: X5 <= X3 - 10 nota: nossa ula inverte o número passado pra ela dentro de seu próprio funcionamento, portanto passamos o valor do immediate em módulo.
       // Branch functions (SB-format)
-      mem[6] <= 32'b00000110000100000100100001100111; //beq
-      mem[7] <= 32'b00000110000100000100100001100111; //bne
-      mem[8] <= 32'b00000110000100000110000001100111; //blt
-      mem[9] <= 32'b00000110000100000101000001100111; //bge
-      mem[10] <=32'b00000110000100000111000001100111; //bltu
-      mem[11] <=32'b00000110000100000111100001100111; //bgeu
+      //mem[6] <= 32'b00000110000100000100100001100111; //beq
+      //mem[7] <= 32'b00000110000100000100100001100111; //bne
+      //mem[8] <= 32'b00000110000100000110000001100111; //blt
+      //mem[9] <= 32'b00000110000100000101000001100111; //bge
+      //mem[10] <=32'b00000110000100000111000001100111; //bltu
+      //mem[11] <=32'b00000110000100000111100001100111; //bgeu
      
+     //AUIPC, JAL, JALR
+
+      //mem[12] <=32'b00000000000000000010000110110111; //AUIPC 
+      //mem[13] <=32'b00000000000000000001000111101111; //JAL 
+      //mem[14] <=32'b00000000000100010000011001100111; // JALR 
 
       if (we) begin
         mem[address] = entrada;
@@ -113,13 +120,16 @@ endmodule
 
 module registrador(
   input clk,
-   input load,
+  input load,
   input [63:0] entrada,
+  input reset,
   output reg [63:0] saida
 );
-  // na primeria interacao retorna 64'bX, pois nada foi setado, ate aquele momento
 
   always @(posedge clk) begin
+    if (reset) begin
+      saida <= 64'd0;
+    end
         if (load) begin
       saida <= entrada;
     end
@@ -132,7 +142,7 @@ module registrador32b(
   input clk,
   input load,
   input [31:0] entrada,
-  output reg [31:0] saida
+  output reg [31:0] saida 
 );
   // na primeria interacao retorna 64'bX, pois nada foi setado, ate aquele momento
 
@@ -254,6 +264,7 @@ module datapath(
   input we, clk, we_ram, we_mi,
   input load_PC,
   input load_IR,
+  input reset_PC,
   input [63:0] PCres,
   input [63:0] somador_PC,
   input [63:0] imm_PC,
@@ -266,6 +277,7 @@ module datapath(
   input decisor3,
   input decisor4,
   input decisor5,
+  input decisor6,
   input somador_subtrator,
   output BEQ,
   output BNE,
@@ -276,7 +288,7 @@ module datapath(
   output [63:0] douta_saida,
   output [63:0] data_ram,
   output [31:0] saida_IR,
-  output [31:0] saida_PC,
+  output [63:0] saida_PC,
   output [31:0] saida_MI
 );
 
@@ -296,6 +308,7 @@ module datapath(
   wire [63:0] endereco_MUX_PC;
   wire [63:0] entrada_ula_add;
   wire [63:0] entrada_pc;
+  wire [63:0] somador_imm_PC;
 
   wire [63:0] saida_ula;
 
@@ -307,11 +320,13 @@ module datapath(
 
   Mux_2 SOMA_PC(.S0(UC_PC), .S1(IMM_PC), .decisor(decisor4), .S(endereco_MUX_PC));
 
+  Mux_2 JARL(.S0(enderecoIM), .S1(douta), .decisor(decisor6), .S(somador_imm_PC));
+
   full_adder somadorUC(.NA(somador_PC), .NB(enderecoIM), .carryIn(1'd0), .soma_total(UC_PC), .lista_carryOut());
 
-  full_adder somadorPC(.NA(imm_PC), .NB(enderecoIM), .carryIn(1'd0), .soma_total(IMM_PC), .lista_carryOut());
+  full_adder somadorPC(.NA(imm_PC), .NB(somador_imm_PC), .carryIn(1'd0), .soma_total(IMM_PC), .lista_carryOut());
 
-  registrador PC(.load(load_PC), .clk(clk), .entrada(entrada_pc), .saida(enderecoIM));
+  registrador PC(.load(load_PC), .clk(clk), .entrada(entrada_pc), .reset(reset_PC), .saida(enderecoIM));
  
   assign saida_PC = enderecoIM;
 
@@ -322,7 +337,6 @@ module datapath(
   //parte de baixo
 
   registrador32b IR(.load(load_IR), .clk(clk), .entrada(fio_MI), .saida(saida_IR));
-
  
   RF rf( .we(we), .Rw(Rw), .Ra(Ra), .Rb(Rb), .din(din), .douta(douta), .doutb(doutb), .clk(clk) ); //instancia o RF
 
@@ -335,8 +349,7 @@ module datapath(
 
   Mux_2 mux_din(.S0(saida_ula), .S1(dout_ram), .decisor(decisor2), .S(funcoesSequnciais));
 
-  Mux_2 Mux_rf(.S0(UC_PC), .S1(funcoesSequnciais), .decisor(decisor5), .S(din));
-
+  Mux_2 Mux_rf(.S0(endereco_MUX_PC), .S1(funcoesSequnciais), .decisor(decisor5), .S(din));
 
   assign douta_saida = douta;
   assign data_ram = dout_ram;
@@ -348,30 +361,194 @@ endmodule
 //Store:
 
 
+module uc(
+  input clk,
+  input BEQ,
+  input BNE,
+  input BGE,
+  input BLT,
+  input BGEU,
+  input BLTU,
+  input [31:0] saida_IR,
+  input [31:0] saida_MI,
+
+  output reg decisor0,
+  output reg reset_PC,
+  output reg decisor1,
+  output reg decisor2,
+  output reg decisor3,
+  output reg decisor4,
+  output reg decisor5,
+  output reg decisor6,
+  output reg we, we_ram, we_mi, we_pc, we_ir,
+  output reg somador_subtrator,
+  output reg [63:0] PCres,
+  output reg [63:0] somador_PC,
+  output reg [63:0] imm_PC,
+  output reg [4:0] Rw,
+  output reg [4:0] Ra, Rb,
+  output reg [63:0] entrada_mux_add_sub );
+
+  reg [1:0] sel;
+  reg [2:0] selEx;
+
+  initial begin
+    we_pc = 1;
+    PCres = 64'd0;
+    decisor3 = 0;
+    decisor4 = 0;
+    sel = 2'b00;
+    reset_PC = 1'b1;
+    we = 0; 
+    we_ir = 0;
+    we_pc = 0;
+
+    decisor3 <= 1;
+    
+   
+  end
+  
+
+  always @(posedge clk)
+  begin
+    
+    case (sel) 
+
+      2'b00: //fetch
+      begin
+        reset_PC = 1'b0;
+        decisor3 = 1'b1;
+        decisor4 = 1'b0;
+        somador_PC = 64'd1;
+        we_pc = 1;
+        we_ir = 1;
+        sel <= 2'b01;
+      end
+
+      2'b01: //decode
+      begin
+        we_pc = 0;
+        we_ir = 0;
+        if(saida_MI[6:0] == 7'b0110011) // add/sub
+        begin
+          sel <= 2'b10; 
+          selEx <= 3'b000;
+        end
+
+        if(saida_MI[6:0] == 7'b0000011) //load
+        begin
+          sel<= 2'b10;
+          selEx <= 3'b001;
+        end
+
+      end
+
+      2'b10: //ex
+      begin
+        case (selEx)
+          3'b000: //0110011 -> ADD ou SUB
+          begin
+            somador_subtrator = 0;
+            we = 1;
+            
+            //ajuste dos MUX
+            decisor0 = 0;
+            decisor1 = 1;
+            decisor2 = 0;
+            decisor5 = 1;
+
+            if(saida_MI[31:25] == 7'b0100000)
+            begin
+              somador_subtrator = 1;
+            end
+
+            Ra = saida_MI[24:20];
+            Rb = saida_MI[19:15];
+            Rw = saida_MI[11:7]; //salva o resultado da operação no endereço Rw
+    
+            sel <= 2'b11;
+            
+          end
+
+         3'b001: //load
+          begin
+           
+           decisor0 = 1;
+           decisor1 = 1;
+           decisor2 = 1;
+           decisor5 = 1;
+
+           Ra = saida_MI[11:7]; //setta o endereço da ram que será loadado        
+           Rw = saida_MI[19:15]; //setta o endereço do rf que será loada
+           entrada_mux_add_sub = saida_MI[31:20]; //imeddiate
+          
+           we = 1; 
+           sel <= 2'b11;
+           end
+
+          3'b011: 
+          begin
+
+            sel = 2'b11;
+          end
+
+          3'b100: 
+          begin
+            sel = 2'b11;
+          end
+
+          3'b101: 
+          begin
+            sel = 2'b11;
+          end
+          
+          default: sel <= 2'b11;
+          
+        endcase
+      end
+
+      2'b11: //write back
+      begin
+        we = 0;
+        Ra = Rw;
+        we_ram = 0;
+        //sel = 2'b00;
+      end
+
+    endcase
+
+
+  end
+
+endmodule
+
 //---------testbench-datapath-------------------------
 
-module testbench;
-  reg we, clk, we_ram, we_mi;
-  reg load_PC;
-  reg load_IR;
-  reg [63:0] PCres;
-  reg [63:0] somador_PC;
-  reg [63:0] imm_PC;
-  reg [4:0] Rw;
-  reg [4:0] Ra, Rb; //Ra, rb são utilizados pra acessar o endereço dos registradores do RF, cuja conteúdo é exposto por douta e doutb
-  reg [63:0] entrada_mux_add_sub;
-  reg decisor0;
-  reg decisor1;
-  reg decisor2;
-  reg decisor3;
-  reg decisor4;
-  reg decisor5;
-  reg decisor_somador_subtrator;
+module testbench2_tb();
+  reg clk;
+  wire we, we_ram, we_mi;
+  wire load_PC;
+  wire load_IR;
+  wire [63:0] PCres;
+  wire [63:0] somador_PC;
+  wire [63:0] imm_PC;
+  wire [4:0] Rw;
+  wire [4:0] Ra, Rb;
+  wire [63:0] entrada_mux_add_sub;
+  wire decisor0;
+  wire decisor1;
+  wire decisor2;
+  wire decisor3;
+  wire decisor4;
+  wire decisor5;
+  wire decisor6;
+  wire decisor_somador_subtrator;
   wire [63:0] douta_saida; //contém conteúdo do registrador acessado por Ra
   wire [63:0] data_ram; //contém conteúdo do elemento de memória acessado pela saída da ULA, que é o resultado da soma
   wire [31:0] saida_IR;
   wire [31:0] saida_MI;
-   wire [31:0] saida_PC;
+  wire [63:0] saida_PC;
+  wire reset_PC;
   wire BEQ;
   wire BNE;
   wire BGE;
@@ -379,11 +556,40 @@ module testbench;
   wire BGEU;
   wire BLTU;
    
+
+  uc auc(
+  .clk(clk),
+  .BEQ(BEQ),
+  .BNE(BNE),
+  .BGE(BGE),
+  .BLT(BLT),
+  .BGEU(BGEU),
+  .BLTU(BLTU),
+  .saida_IR(saida_IR),
+  .saida_MI(saida_MI),
+
+  .decisor0(decisor0),
+  .decisor1(decisor1),
+  .decisor2(decisor2),
+  .decisor3(decisor3),
+  .decisor4(decisor4),
+  .decisor5(decisor5),
+  .decisor6(decisor6),
+  .reset_PC(reset_PC),
+  .we(we), .we_ram(we_ram), .we_mi(we_mi), .we_pc(load_PC), .we_ir(load_IR),
+  .somador_subtrator(decisor_somador_subtrator),
+  .PCres(PCres),
+  .somador_PC(somador_PC),
+  .imm_PC(imm_PC),
+  .Rw(Rw),
+  .Ra(Ra), .Rb(Rb),
+  .entrada_mux_add_sub(entrada_mux_add_sub) );
+  
   datapath dph(
   .we(we), .clk(clk), .we_ram(we_ram), .we_mi(we_mi),
   .load_PC(load_PC), .load_IR(load_IR), .PCres(PCres),
-  .Rw(Rw),
-  .Ra(Ra), .Rb(Rb),
+  .Rw(Rw), .Ra(Ra), .Rb(Rb),
+  .reset_PC(reset_PC),
   .entrada_mux_add_sub(entrada_mux_add_sub),
   .decisor0(decisor0),
   .decisor1(decisor1),
@@ -391,6 +597,7 @@ module testbench;
   .decisor3(decisor3),
   .decisor4(decisor4),
   .decisor5(decisor5),
+  .decisor6(decisor6),
   .somador_subtrator(decisor_somador_subtrator),
   .douta_saida(douta_saida),
   .data_ram(data_ram),
@@ -401,237 +608,19 @@ module testbench;
   .imm_PC(imm_PC)
 );
 
-    initial begin
-      //Set valores iniciais
-      clk = 0;
-      we = 0;
-      we_ram = 0;
-      Ra = 5'd0;
-      Rw = 5'd0;
-      Rb = 5'd0;
-      somador_PC = 64'd1;
-      decisor_somador_subtrator = 0;
-      entrada_mux_add_sub = 64'd0;
-      decisor0 = 0;
-      decisor1 = 0;
-      decisor2 = 0;
-      decisor3 = 0;
-      decisor4 = 0;
-      decisor5 = 1;
-     
-      //--------------Exemplos de LOAD------------------------  
-      //-----------load mem(X0 + 0) em X2 -> X2 <= mem(0)-------------
-     
-      $display("----------LOAD EXAMPLES START---------");
-      #10;
-      Ra = 5'd0;
-      Rw = 5'd2;
-     
-     
-      //ajuste dos MUX
-      decisor0 = 1;
-      decisor1 = 1;
-      decisor2 = 1;
-     
-      #10 we = 1;
-      #10 we = 0;
-      Ra = Rw;  //fazendo isso para expor o conteúdo do registrador loadado em douta_saida
-      #10  $display("registrador X2 = %d", douta_saida);
+initial begin
+  $dumpfile("test.vcd");
+    $dumpvars(0);
+ //32'b0000000 00100 00010 000 00110 0110011; //r-format Add: X6 <= X2 + X4 mem(0)
+    clk = 1'b0;
+    
+    #10 $display("valor de X6 após add (X6 <= X4 + X2) = %d", douta_saida);
 
-       //--------load (X0 + 1) em X4 -> X4 <= mem(1)--------
-      #10;
-      Ra = 5'd0;
-      Rw = 5'd4;
-      entrada_mux_add_sub = 64'd1;
-     
-      //ajuste dos MUX
-      decisor0 = 1;
-      decisor1 = 1;
-      decisor2 = 1;
-     
-      #10 we = 1;
-      #10 we = 0;
-      Ra = Rw;  //fazendo isso para expor o conteúdo do registrador loadado em douta_saida
-      #10  $display("registrador X4 = %d", douta_saida);
-      $display("----------LOAD EXAMPLES END----------");
-     
-      $display("\n---------BNE START---------");
-      //descobrir IR
-      #10;
-      load_PC = 1;
-      PCres = 64'd7;
-      #10;
-      load_PC = 0;
-     
-      #10;
-      load_IR = 1;
-      #10;
-      $display("conteúdo de IR = %b", saida_IR);
-      load_IR = 0;
-
-      //---------Leitura BNE---------------
-      Ra = 5'd2;
-      Rb = 5'd4;
-
-      decisor0 = 0;
-      decisor1 = 1;
-
-      #10 $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
-      if  (BNE == 1) begin
-        somador_PC = saida_IR [31:25];
-      end
-      else begin
-        somador_PC = 64'd1;
-      end
-
-      #10;
-      decisor3 = 1;
-      #10;
-      load_PC = 1;
-      #10;
-      load_PC = 0;
-      #10;
-      $display("PC = PC + imediatoBNE = %b", saida_MI); //a saída esperada é a da informação de BLTU contida na memória, já que o immediate do bne é 0000011
-      $display("\n---------BNE FINISH---------");
+    $stop;
+  
+end
 
 
-       //---------------Exemplo de ADDI e SUBI---------------
-      $display("\n---------ADDI START---------");
-      //descobrir IR
-      decisor3 = 0;
-      #10;
-      load_PC = 1;
-      PCres = 64'd4;
-      #10;
-      load_PC = 0;
-     
-      #10;
-      load_IR = 1;
-      #10;
-      $display("conteúdo de IR = %b", saida_IR);
-      load_IR = 0;
-
-
-      //---------------addi X1 = X2 + 9 = 12 + 9-------------
-      Ra = 5'd2;
-      Rw = 5'd1;
-      entrada_mux_add_sub = 52'd0 + saida_IR[31:20];
-     
-      //Ajuste dos MUX
-      decisor0 = 1;
-      decisor1 = 1;
-      decisor2 = 0;
-     
-      #10 we = 1;
-      #10 we = 0;
-     
-      Ra = 5'd1; //para expor o conteúdo de X1
-      #10 $display("Conteúdo de X1 após addi (X1 <= X2 + 9) = %d", douta_saida);
-      #10 $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
-     
-      $display("------------ADDI END------------\n");
-     
-      //decidindo ir
-      $display("-----------SUBI START---------");
-     
-      #10;
-      somador_PC = 64'd1;
-      decisor3 = 1;
-      #10;
-      load_PC = 1;
-      // PCres = 64'd5;
-      #10;
-      decisor3 = 0;
-      load_PC = 0;
-     
-      #10;
-      load_IR = 1;
-      #10;
-      $display("conteúdo de IR = %b", saida_IR);
-      load_IR = 0;
-     
-      //-------subi X3 <= X4 - 10 = 11 - 10------
-      #10;
-      Ra = 5'd4;
-      Rw = 5'd3;
-     
-      entrada_mux_add_sub = saida_IR[31:20];
-     
-      #10 decisor_somador_subtrator = 1;
-     
-      #10 //ajuste dos MUX
-      decisor0 = 1;
-      decisor1 = 1;
-      decisor2 = 0;
-     
-      #10 we = 1;
-      #10 we = 0;
-      #10 Ra = 5'd3;
-      #10 $display("valor de X3 após subi (X3 <= X4 - 10) = %d", douta_saida);
-      #10  $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
-     
-      $display("------------SUBI END----------\n");
-     
-      //--------------Exemplo de ADD,SUB e STORE--------------
-      //-------Add X6 <= X4 + X2 = 12 + 11---------------
-      $display("\n---------ADD START---------");
-      Ra = 5'd2;
-      Rb = 5'd4;
-      Rw = 5'd6;
-      decisor_somador_subtrator = 0;
-     
-      //ajuste dos MUX
-      decisor0 = 0;
-      decisor1 = 1;
-      decisor2 = 0;
-     
-      #10 we = 1;
-      #10 we = 0;
-      #10 Ra = 5'd6;
-      #10 $display("valor de X6 após add (X6 <= X4 + X2) = %d", douta_saida);
-      #10  $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
-     
-      $display("---------ADD END---------\n");
-     
-      //--------Sub X7 <= X6 - X3 = 23 - 1-------------
-      $display("\n---------SUB START---------");
-      Ra = 5'd6;
-      Rb = 5'd3;
-      Rw = 5'd7;
-      #10 decisor_somador_subtrator = 1;
-     
-      //ajuste dos MUX
-      decisor0 = 0;
-      decisor1 = 1;
-      decisor2 = 0;
-     
-      #10 we = 1;
-      #10 we = 0;
-      #10 Ra = 5'd7;
-      #10 $display("valor de X7 após sub(X7 <= X6 - X3 ) = %d", douta_saida);
-      #10  $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
-      $display("---------SUB END---------\n");
-     
-      //----------Store de X7 into mem(2)-------------
-      $display("\n---------STORE START---------");
-      Ra = 5'd7;
-      Rb = 5'd2;
-      entrada_mux_add_sub = 0;
-     
-      //ajuste dos MUX
-      decisor0 = 1;
-      decisor1 = 0;
-      decisor2 = 1;
-     
-      #10 we_ram = 1;
-      #10 we_ram = 0;
-      #10 $display("valor de mem(2) após store (mem(2) <= X7) = %d", data_ram);
-      #10  $display("BEQ = %b, BNE = %b, BGE = %b, BGEU = %b , BLT = %b,  BLTU = %b", BEQ, BNE, BGE, BGEU, BLT, BLTU);
-      $display("---------STORE END---------\n");
-     
-      $finish;
-    end
-   
-    always #5 clk = ~clk;
+always #5 clk = ~clk;
 
 endmodule

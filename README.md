@@ -12,7 +12,8 @@
  The future implementations we make in each class will be made in branches.
 
  ## :memo: Members
-
  João Pedro Bassetti Freitas -> Nusp: 13903411,
- Carlos Maria Engler Pinto -> Nusp: 510____;
+
+ Carlos Maria Engler Pinto -> Nusp: 510____,
+ 
  Laura Fernandes Montenegro -> 13______;

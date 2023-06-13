@@ -1,5 +1,5 @@
-//---------testbench-datapath-------------------------
 
+//---------testbench-datapath-------------------------
 module testbench;
   reg we, clk, we_ram, we_mi;
   reg load_PC;

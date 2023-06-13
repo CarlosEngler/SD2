@@ -10,3 +10,9 @@
  The first project we worked on was making a Karatsuba multiplier.
  The current project we are developing throughout the classes is the main architecture of a RISC-V processor.
  The future implementations we make in each class will be made in branches.
+
+ ## :memo: Members
+
+ João Pedro Bassetti Freitas -> Nusp: 13903411,
+ Carlos Maria Engler Pinto -> Nusp: 510____;
+ Laura Fernandes Montenegro -> 13______;

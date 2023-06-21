@@ -12,11 +12,11 @@ assign carryOut = (A & B) | (A & carryIn) | (B & carryIn);
 endmodule
 
 module full_adder ( 
-  input [22:0] NA,
-  input [22:0] NB,
+  input [25:0] NA,
+  input [25:0] NB,
   input carryIn,
-  output [22:0] soma_total,
-  output [22:0] lista_carryOut
+  output [25:0] soma_total,
+  output [25:0] lista_carryOut
 );
 
  half_adder UUT(
@@ -30,7 +30,7 @@ module full_adder (
 generate
   genvar i;
  
-    for (i=1; i < 23; i = i+1) begin
+    for (i=1; i < 26; i = i+1) begin
         half_adder UUX(
         .A(NA[i]),
         .B(NB[i]),
@@ -43,22 +43,23 @@ endgenerate
    
 endmodule
 
-//------------------------ULA----------------
+//-----------------ULAS----------------
 
 module Big_ULA (
-  input [22:0] A,
-  input [22:0] B,
+  input [25:0] A,
+  input [25:0] B,
   input [3:0] lists,
-  output [22:0] resultado,
+  output [25:0] resultado,
   output [3:0] alu_flags
 );
 
 
 endmodule
 
-module Small_Ula (
+module Small_Ula (saida
   input [7:0] A,
   input [7:0] B,
+  input subtrador,
   output [7:0] resultado
 );
 
@@ -66,25 +67,23 @@ module Small_Ula (
     wire [7:0] inverte;
     wire [7:0] entrada_A;
     wire subtrador;
-    wire [22:0] resultado23bits;
-    wire [22:0] lista_carryOut;
+    wire [25:0] resultado23bits;
+    wire [25:0] lista_carryOut;
 
-    assign subtrador = 1;
     assign menor_valor = (A < B) ? 1 : 0;
 
     assign entrada_A = (menor_valor) ? B : A;
-    assign inverte = (menor_valor) ? ~A : ~B;
+    assign inverte = (menor_valor && ) ? ~A : ~B;
 
         full_adder UUT(
-        .NA({15'd0, entrada_A}),
-        .NB({15'd0, inverte}),
+        .NA({18'd0, entrada_A}),
+        .NB({18'd0, inverte}),
         .carryIn(subtrador),
         .soma_total(resultado23bits),
         .lista_carryOut(lista_carryOut)
         );
 
     assign resultado = [7:0]resultado23bits; 
-
 
 endmodule
 
@@ -94,10 +93,10 @@ module Somador_subtrador (
   output [7:0] resultado,
 );
 
-wire [22:0] resultado23bits;
+wire [25:0] resultado23bits;
 wire [7:0] B;
 wire [7:0] B_final;
-wire [22:0] lista_carryOut;
+wire [25:0] lista_carryOut;
 
 
 assign B = 8'd1;
@@ -105,8 +104,8 @@ assign B_final = (subtrador) ? ~B : B; // inverte bits para a subtracao
 
 // somador
 full_adder UUT(
-    .NA({15'd0, A}),
-    .NB({15'd0, B_final}),
+    .NA({18'd0, A}),
+    .NB({18'd0, B_final}),
     .carryIn(subtrador),
     .soma_total(resultado23bits),
     .lista_carryOut(lista_carryOut)
@@ -117,10 +116,10 @@ full_adder UUT(
 endmodule
 
 module Mux_2_23bits (
-  input [22:0] S1,
-  input [22:0] S0,
+  input [25:0] S1,
+  input [25:0] S0,
   input decisor,
-  output [22:0] S
+  output [25:0] S
 );
   // mux que decide S1 se decisor = 1 e S0 se for igual a zero
   assign S = decisor ? S1 : S0;
@@ -146,18 +145,18 @@ module registrador(
 );
 
   always @(posedge clk) begin
-         saida <= entrada;
+    saida <= entrada;
  end
 
 endmodule
 
 module Shift_Right(
-    input [22:0] entrada,
+    input [25:0] entrada,
     input [4:0] tamanho,
-    output [22:0] saida
+    output [25:0] saida
 );
 
-    assign saida = {tamanho'b0, [22:tamanho]entrada};
+    assign saida = entrada>>tamanho;
 
 endmodule
 
@@ -167,13 +166,18 @@ module Shift_Right_left(
     input decisor,
     output [22:0] saida
 );
-    assign saida = (decisor) ? {tamanho'b0, [22:tamanho]entrada} : {[(22-tamanho):0]entrada, tamanho'b0};
-                                //direita              //esquerda
+    assign saida = (decisor) ? entrada<<tamanho : entrada>>tamanho;
+                                //esquerda              //direita
 endmodule
 
 module arredondamento(
-    
+    input [7:0] expoente,
+    input [25:0] entrada,
+    output [22:0] saida
 );
+ 
+
+assign resultado = (entrada[2] == 0) ? entrada[25:3] : ((entrada[1:0] > 2'b00) ? entrada[25:3] : (entrada[25:3] + 1));
 
 endmodule
 
@@ -188,7 +192,7 @@ module Datapath(
     input decisor_mux_saida_big_ula,
     input decisor_shift_right_left,
     input subtrador_Somador_subtrador, 
-    output reg [22:0] saida_registrador
+    output reg [31:0] saida_registrador
 );
 
     wire [7:0] resultado;
@@ -196,14 +200,17 @@ module Datapath(
     wire [7:0] saida_mux_expoentes_escolhido;
     wire [7:0] saida_subtrador_somador;
 
-    wire[22:0] saida_escolhe_shift_right;
-    wire[22:0] saida_escolhe_entrada_dois_ula;
-    wire[22:0] saida_shift_right;
+    wire[25:0] saida_escolhe_shift_right;
+    wire[25:0] saida_escolhe_entrada_dois_ula;
+    wire[25:0] saida_shift_right;
 
-    wire[22:0] saida_big_ula;
-    wire[22:0] mux_saida_big_ula;
+    wire[25:0] saida_big_ula;
+    wire[25:0] mux_saida_big_ula;
 
-    wire[22:0] saida_shift_right_left;
+    wire[25:0] saida_shift_right_left;
+
+    wire [31:0] saida_arredondamento;
+
 
 
     Small_Ula pequena(.A(input_1[30:23]), .B(input_2[30:23]), .resultado(resultado));
@@ -223,8 +230,10 @@ module Datapath(
     //parte da final
     Mux_2_23bits saida_ula_grande(.S0(saida_big_ula), .S1(), .S(mux_saida_big_ula), .decisor(decisor_mux_saida_big_ula));
     Shift_Right_left direita_esquerda(.entrada(mux_saida_big_ula), .saida(saida_shift_right_left), .decisor(decisor_shift_right_left)); //verificar isso
-    arredondamento arredonda(); //falta coisa
+    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida(saida)); //falta coisa
 
+
+assign saida-saida_registrador = saida_arredondamento;
 
 endmodule
 
@@ -255,6 +264,9 @@ module testbench();
       .subtrador_Somador_subtrador(subtrador_Somador_subtrador), 
       .saida_registrador(saida_registrador)
       );
+
+    initial begin
+    end
 
     always #5 clk= ~clk;
 endmodule

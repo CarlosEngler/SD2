@@ -13,5 +13,9 @@
 
  ## :memo: Members
  João Pedro Bassetti Freitas -> Nusp: 13903411,
- Carlos Maria Engler Pinto -> Nusp: 510____ ,
+ Carlos Maria Engler Pinto -> Nusp: 5104641,
  Laura Fernandes Montenegro -> 13______ ;
+
+ ## Bibliography
+
+ - [Computer Organization and Design Risc-V Edition](http://home.ustc.edu.cn/~louwenqi/reference_books_tools/Computer%20Organization%20and%20Design%20RISC-V%20edition.pdf)

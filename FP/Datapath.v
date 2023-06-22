@@ -43,16 +43,77 @@ endgenerate
    
 endmodule
 
+module Multiplicador(
+  input [25:0] b,
+  input [25:0] a,
+  output [51:0] result
+);
+  wire [51:0] resultado;
+  wire [51:0] entrada;
+  
+  half_multiplica multiplicamuito(.b(1'b0), .a(a), .soma(resultado), .entrada(52'd0));
+
+ generate
+    genvar i;
+    	for (i = 0; i < 52; i = i + 1) begin
+        half_multiplica multiplica(
+        .b(b[i]), 
+        .a(a), 
+        .soma(resultado), 
+        .entrada(entrada));
+        assign entrada = resultado;
+        end
+ endgenerate
+  
+  assign result = resultado;
+
+endmodule
+
+module half_multiplica(
+	input b,
+  	input [25:0] a,
+  	input [51:0] entrada,
+  	output [51:0] soma
+);
+  
+  assign soma = (b == 1'b1) ? (entrada + (a << i)) : entrada;
+endmodule
+
 //-----------------ULAS----------------
 
 module Big_ULA (
   input [25:0] A,
   input [25:0] B,
-  input [3:0] lists,
-  output [25:0] resultado,
-  output [3:0] alu_flags
+  input decisor,
+  input subtrador,
+  output [51:0] resultado
 );
 
+  integer i;
+
+  // se o decisor for 1 -> multiplicacao 0 -> é uma soma
+  wire [25:0] resultado26bits;
+  wire [51:0] result;
+  wire [25:0] lista_carryOut;
+  wire [25:0] B_final;
+
+  assign B_final = (B != 25'd0 && subtrador == 1'b1) ? ~B : B;
+
+  full_adder UUT(
+        .NA(A),
+        .NB(B_final),
+        .carryIn(subtrador),
+        .soma_total(resultado26bits),
+        .lista_carryOut(lista_carryOut)
+  );
+
+  Multiplicador UUY(
+    .a(A),
+    .b(B),
+    .result(result)
+  );
+  
+  assign resultado = (decisor) ? {25'b0, lista_carryOut[52], resultado26bits} : result;
 
 endmodule
 
@@ -73,7 +134,7 @@ module Small_Ula (saida
     assign menor_valor = (A < B) ? 1 : 0;
 
     assign entrada_A = (menor_valor) ? B : A;
-    assign inverte = (menor_valor && ) ? ~A : ~B;
+    assign inverte = (!subtrador) ? ((menor_valor) ? A : B) : ((menor_valor) ? ~A : ~B);
 
         full_adder UUT(
         .NA({18'd0, entrada_A}),
@@ -171,11 +232,16 @@ module Shift_Right_left(
 endmodule
 
 module arredondamento(
+    input clk,
     input [7:0] expoente,
     input [25:0] entrada,
     output [22:0] saida
 );
  
+reg arroz;
+always (posedge clk) begin
+ arroz = expoente;
+end
 
 assign resultado = (entrada[2] == 0) ? entrada[25:3] : ((entrada[1:0] > 2'b00) ? entrada[25:3] : (entrada[25:3] + 1));
 
@@ -185,6 +251,9 @@ module Datapath(
     input clk,
     input [31:0] input_1,
     input [31:0] input_2,
+    input [4:0] tamanho,
+    input [4:0] tamanho2,
+    input soma_multiplica,
     input decisor_mux_expoentes,
     input decisor_mux_expoente_escolhido,
     input decisor_mux_escolhe_shift_right,
@@ -213,7 +282,7 @@ module Datapath(
 
 
 
-    Small_Ula pequena(.A(input_1[30:23]), .B(input_2[30:23]), .resultado(resultado));
+    Small_Ula pequena(.A(input_1[30:23]), .B(input_2[30:23]), .resultado(resultado), .subtrador(soma_multiplica));
     registrador ula_pequena(.clk(clk), .entrada(resultado), .saida(saida_registrador));
 
     //parte da esquerda
@@ -222,15 +291,15 @@ module Datapath(
     Somador_subtrador incrementa_subtrai(.A(saida_segundo_mux), .subtrador(subtrador_Somador_subtrador), .resultado(saida_subtrador_somador));
 
     //parte da direita
-    Mux_2_23bits escolhe_shift_right(.S0(input_1[22:0]), .S1(input_2[22:0]), .S(saida_escolhe_shift_right), .decisor(decisor_mux_escolhe_shift_right));
-    Shift_Right direita(.entrada(saida_escolhe_shift_right), .saida(saida_shift_right)); //verificar isso
-    Mux_2_23bits escolhe_entrada_dois_ula(.S0(input_2[22:0]), .S1(input_1[22:0]), .S(saida_escolhe_entrada_dois_ula), .decisor(decisor_mux_entrada_dois_ula));
-    Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula)); //verificar isso
+    Mux_2_23bits escolhe_shift_right(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_shift_right), .decisor(decisor_mux_escolhe_shift_right));
+    Shift_Right direita(.entrada(saida_escolhe_shift_right), .saida(saida_shift_right), .tamanho(tamanho));
+    Mux_2_23bits escolhe_entrada_dois_ula(.S0({input_2[22:0], 3'd0}), .S1({input_1[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(decisor_mux_entrada_dois_ula));
+    Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula));
 
     //parte da final
     Mux_2_23bits saida_ula_grande(.S0(saida_big_ula), .S1(), .S(mux_saida_big_ula), .decisor(decisor_mux_saida_big_ula));
-    Shift_Right_left direita_esquerda(.entrada(mux_saida_big_ula), .saida(saida_shift_right_left), .decisor(decisor_shift_right_left)); //verificar isso
-    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida(saida)); //falta coisa
+    Shift_Right_left direita_esquerda(.entrada(mux_saida_big_ula), .saida(saida_shift_right_left), .decisor(decisor_shift_right_left), .tamanho(tamanho2));
+    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida(saida), .clk(clk));
 
 
 assign saida-saida_registrador = saida_arredondamento;

@@ -235,15 +235,20 @@ module arredondamento(
     input clk,
     input [7:0] expoente,
     input [25:0] entrada,
-    output [22:0] saida
+    output [31:0] saida
 );
+
  
-reg arroz;
+reg exponent;
 always (posedge clk) begin
- arroz = expoente;
+ exponent = expoente;
 end
 
-assign resultado = (entrada[2] == 0) ? entrada[25:3] : ((entrada[1:0] > 2'b00) ? entrada[25:3] : (entrada[25:3] + 1));
+reg signal; //se o número é negativo, signal = 0; tem que ligar o cabo
+
+reg fraction = (entrada[2] == 0) ? entrada[25:3] : ((entrada[1:0] > 2'b00) ? entrada[25:3] : (entrada[25:3] + 1) /*esse ultimo caso tem que jogar o número dnv no circuito */ );
+
+assign saida  = {signal, exponent, fraction};
 
 endmodule
 

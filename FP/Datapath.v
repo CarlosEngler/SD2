@@ -237,7 +237,8 @@ module Datapath(
     input decisor_shift_right_left,
     input subtrador_big_ula,
     input subtrador_Somador_subtrador, 
-    output reg [31:0] saida_registrador
+    output reg [31:0] saida_registrador,
+    output reg [31:0] saida_final
 );
 
     wire [7:0] resultado;
@@ -258,7 +259,7 @@ module Datapath(
     wire [31:0] saida_arredondamento;
     wire [7:0] saida_arredonda_expoente;
     wire [25:0] saida_arredonda_fracao;
-
+    wire signal;
 
 
     Small_Ula pequena(.A(input_1[30:23]), .B(input_2[30:23]), .resultado(resultado), .subtrador(soma_multiplica_small_ula), .Bmaior(Bmaior)); //retorna a diferenca de exponet no caso da soma, e soma expoente no caso da multiplicação, alem de retornar qual input tinha maior expoente
@@ -278,10 +279,10 @@ module Datapath(
     //parte da final
     Mux_2_23bits saida_ula_grande(.S0(saida_big_ula), .S1(saida_arredonda_fracao), .S(mux_saida_big_ula), .decisor(decisor_mux_saida_big_ula)); //falta coisa
     Shift_Right_left direita_esquerda(.entrada(mux_saida_big_ula), .saida(saida_shift_right_left), .decisor(decisor_shift_right_left), .tamanho(tamanho2));
-    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida_fraction(saida), .saida_e .clk(clk));
+    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida_fraction(saida_arredonda_fracao), .expoente_saida(saida_arredonda_expoente), .clk(clk));
 
 
-assign saida-saida_registrador = saida_arredondamento;
+assign saida_final = {signal, saida_arredonda_expoente, saida_arredonda_fracao};
 
 endmodule
 

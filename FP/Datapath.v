@@ -43,42 +43,6 @@ endgenerate
    
 endmodule
 
-module Multiplicador(
-  input [25:0] b,
-  input [25:0] a,
-  output [51:0] result
-);
-  wire [51:0] resultado;
-  wire [51:0] entrada;
-  
-  half_multiplica multiplicamuito(.b(1'b0), .a(a), .soma(resultado), .entrada(52'd0));
-
- generate
-    genvar i;
-    	for (i = 0; i < 52; i = i + 1) begin
-        half_multiplica multiplica(
-        .b(b[i]), 
-        .a(a), 
-        .soma(resultado), 
-        .entrada(entrada));
-        assign entrada = resultado;
-        end
- endgenerate
-  
-  assign result = resultado;
-
-endmodule
-
-module half_multiplica(
-	input b,
-  	input [25:0] a,
-  	input [51:0] entrada,
-  	output [51:0] soma
-);
-  
-  assign soma = (b == 1'b1) ? (entrada + (a << i)) : entrada;
-endmodule
-
 //-----------------ULAS----------------
 
 module Big_ULA (
@@ -86,16 +50,15 @@ module Big_ULA (
   input [25:0] B,
   input decisor,
   input subtrador,
-  output [51:0] resultado
+  output [25:0] resultado
 );
 
-  integer i;
-
   // se o decisor for 1 -> multiplicacao 0 -> é uma soma
+  integer i;
   wire [25:0] resultado26bits;
-  wire [51:0] result;
   wire [25:0] lista_carryOut;
   wire [25:0] B_final;
+  reg [47:0] soma;
 
   assign B_final = (B != 25'd0 && subtrador == 1'b1) ? ~B : B;
 
@@ -107,27 +70,28 @@ module Big_ULA (
         .lista_carryOut(lista_carryOut)
   );
 
-  Multiplicador UUY(
-    .a(A),
-    .b(B),
-    .result(result)
-  );
+  always @* begin
+    soma = 48'd0;
+    for(i = 3; i < 26; i = i + 1) begin
+        if (B[i] == 1'b1) soma = soma + (A << i);
+    end
+  end
   
-  assign resultado = (decisor) ? {25'b0, lista_carryOut[52], resultado26bits} : result;
+  assign resultado = (decisor) ? resultado26bits : soma[47:25];
 
 endmodule
 
-module Small_Ula (saida
+module Small_Ula (
   input [7:0] A,
   input [7:0] B,
   input subtrador,
+  output Bmaior,
   output [7:0] resultado
 );
 
     wire menor_valor;
     wire [7:0] inverte;
     wire [7:0] entrada_A;
-    wire subtrador;
     wire [25:0] resultado23bits;
     wire [25:0] lista_carryOut;
 
@@ -144,14 +108,15 @@ module Small_Ula (saida
         .lista_carryOut(lista_carryOut)
         );
 
-    assign resultado = [7:0]resultado23bits; 
+    assign resultado = resultado23bits[7:0]; 
+    assign Bmaior = menor_valor;
 
 endmodule
 
 module Somador_subtrador (
   input [7:0] A,
   input subtrador,
-  output [7:0] resultado,
+  output [7:0] resultado
 );
 
 wire [25:0] resultado23bits;
@@ -172,7 +137,7 @@ full_adder UUT(
     .lista_carryOut(lista_carryOut)
   );
 
-  assign resultado = [7:0]resultado23bits; 
+  assign resultado = resultado23bits[7:0]; 
 
 endmodule
 
@@ -222,10 +187,10 @@ module Shift_Right(
 endmodule
 
 module Shift_Right_left(
-    input [22:0] entrada,
+    input [25:0] entrada,
     input [4:0] tamanho,
     input decisor,
-    output [22:0] saida
+    output [25:0] saida
 );
     assign saida = (decisor) ? entrada<<tamanho : entrada>>tamanho;
                                 //esquerda              //direita
@@ -235,20 +200,24 @@ module arredondamento(
     input clk,
     input [7:0] expoente,
     input [25:0] entrada,
-    output [31:0] saida
+    output [25:0] saida_fraction,
+    output overflow,
+    output [7:0] expoente_saida
 );
 
- 
-reg exponent;
-always (posedge clk) begin
- exponent = expoente;
-end
+wire overflow_auxiliar;
 
-reg signal; //se o número é negativo, signal = 0; tem que ligar o cabo
+wire [23:0] fraction;
 
-reg fraction = (entrada[2] == 0) ? entrada[25:3] : ((entrada[1:0] > 2'b00) ? entrada[25:3] : (entrada[25:3] + 1) /*esse ultimo caso tem que jogar o número dnv no circuito */ );
+assign fraction = (entrada[2:0] > 3'b100) ? (entrada[25:3] + 1) : (entrada[25:3] == 3'b100) ? ((entrada[3] == 1'b0) ? entrada[25:3] : (entrada[25:3] + 1)) : entrada[25:3];
 
-assign saida  = {signal, exponent, fraction};
+assign overflow_auxiliar = fraction[23];
+
+assign overflow = fraction[23];
+
+assign saida_fraction = (overflow_auxiliar) ?  entrada : {fraction[22:0], 3'b000};
+
+assign expoente_saida = expoente;
 
 endmodule
 
@@ -258,18 +227,21 @@ module Datapath(
     input [31:0] input_2,
     input [4:0] tamanho,
     input [4:0] tamanho2,
-    input soma_multiplica,
+    input soma_multiplica_small_ula,
+    input soma_multiplica_big_ula,
     input decisor_mux_expoentes,
     input decisor_mux_expoente_escolhido,
     input decisor_mux_escolhe_shift_right,
     input decisor_mux_entrada_dois_ula,
     input decisor_mux_saida_big_ula,
     input decisor_shift_right_left,
+    input subtrador_big_ula,
     input subtrador_Somador_subtrador, 
     output reg [31:0] saida_registrador
 );
 
     wire [7:0] resultado;
+    wire Bmaior;
     wire [7:0] saida_mux_expoentes;
     wire [7:0] saida_mux_expoentes_escolhido;
     wire [7:0] saida_subtrador_somador;
@@ -284,27 +256,29 @@ module Datapath(
     wire[25:0] saida_shift_right_left;
 
     wire [31:0] saida_arredondamento;
+    wire [7:0] saida_arredonda_expoente;
+    wire [25:0] saida_arredonda_fracao;
 
 
 
-    Small_Ula pequena(.A(input_1[30:23]), .B(input_2[30:23]), .resultado(resultado), .subtrador(soma_multiplica));
+    Small_Ula pequena(.A(input_1[30:23]), .B(input_2[30:23]), .resultado(resultado), .subtrador(soma_multiplica_small_ula), .Bmaior(Bmaior)); //retorna a diferenca de exponet no caso da soma, e soma expoente no caso da multiplicação, alem de retornar qual input tinha maior expoente
     registrador ula_pequena(.clk(clk), .entrada(resultado), .saida(saida_registrador));
 
     //parte da esquerda
-    Mux_2_8bits Expoentes1_2(.S0(input_1[30:23]), .S1(input_2[30:23]), .S(saida_mux_expoentes), .decisor(decisor_mux_expoentes)); //escolhe o menor expoente
-    Mux_2_8bits ExpoenteEscolhido_final(.S0(saida_mux_expoentes), .S1(), .S(saida_mux_expoentes_escolhido), .decisor(decisor_mux_expoente_escolhido));
+    Mux_2_8bits Expoentes1_2(.S0(input_1[30:23]), .S1(input_2[30:23]), .S(saida_mux_expoentes), .decisor(~Bmaior)); //escolhe o menor expoente
+    Mux_2_8bits ExpoenteEscolhido_final(.S0(saida_mux_expoentes), .S1(saida_arredonda_expoente), .S(saida_mux_expoentes_escolhido), .decisor(decisor_mux_expoente_escolhido)); //falta coisa
     Somador_subtrador incrementa_subtrai(.A(saida_segundo_mux), .subtrador(subtrador_Somador_subtrador), .resultado(saida_subtrador_somador));
 
     //parte da direita
     Mux_2_23bits escolhe_shift_right(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_shift_right), .decisor(decisor_mux_escolhe_shift_right));
     Shift_Right direita(.entrada(saida_escolhe_shift_right), .saida(saida_shift_right), .tamanho(tamanho));
     Mux_2_23bits escolhe_entrada_dois_ula(.S0({input_2[22:0], 3'd0}), .S1({input_1[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(decisor_mux_entrada_dois_ula));
-    Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula));
+    Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula), .decisor(soma_multiplica_big_ula), .subtrador(subtrador_big_ula));
 
     //parte da final
-    Mux_2_23bits saida_ula_grande(.S0(saida_big_ula), .S1(), .S(mux_saida_big_ula), .decisor(decisor_mux_saida_big_ula));
+    Mux_2_23bits saida_ula_grande(.S0(saida_big_ula), .S1(saida_arredonda_fracao), .S(mux_saida_big_ula), .decisor(decisor_mux_saida_big_ula)); //falta coisa
     Shift_Right_left direita_esquerda(.entrada(mux_saida_big_ula), .saida(saida_shift_right_left), .decisor(decisor_shift_right_left), .tamanho(tamanho2));
-    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida(saida), .clk(clk));
+    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida_fraction(saida), .saida_e .clk(clk));
 
 
 assign saida-saida_registrador = saida_arredondamento;

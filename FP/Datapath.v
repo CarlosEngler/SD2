@@ -115,25 +115,24 @@ endmodule
 
 module Somador_subtrador (
   input [7:0] A,
+  input [7:0] 
+  ,
   input subtrador,
   output [7:0] resultado
 );
 
 wire [25:0] resultado23bits;
-wire [7:0] B;
 wire [7:0] B_final;
 wire [25:0] lista_carryOut;
 
-
-assign B = 8'd1;
-assign B_final = (subtrador) ? ~B : B; // inverte bits para a subtracao
+assign B_final = (subtrador) ? ~n_shifts : n_shifts; // inverte bits para a subtracao
 
 // somador
 full_adder UUT(
     .NA({18'd0, A}),
     .NB({18'd0, B_final}),
     .carryIn(subtrador),
-    .soma_total(resultado23bits),
+    .soma_total(resultado23bits),ignal
     .lista_carryOut(lista_carryOut)
   );
 
@@ -209,6 +208,11 @@ wire overflow_auxiliar;
 
 wire [23:0] fraction;
 
+reg [7:0] exponent;
+
+assign exponent = expoente;
+
+
 assign fraction = (entrada[2:0] > 3'b100) ? (entrada[25:3] + 1) : (entrada[25:3] == 3'b100) ? ((entrada[3] == 1'b0) ? entrada[25:3] : (entrada[25:3] + 1)) : entrada[25:3];
 
 assign overflow_auxiliar = fraction[23];
@@ -217,7 +221,7 @@ assign overflow = fraction[23];
 
 assign saida_fraction = (overflow_auxiliar) ?  entrada : {fraction[22:0], 3'b000};
 
-assign expoente_saida = expoente;
+assign expoente_saida = exponent;
 
 endmodule
 
@@ -227,17 +231,15 @@ module Datapath(
     input [31:0] input_2,
     input [4:0] tamanho,
     input [4:0] tamanho2,
+    input [7:0] tamanho3,
     input soma_multiplica_small_ula,
     input soma_multiplica_big_ula,
-    input decisor_mux_expoentes,
     input decisor_mux_expoente_escolhido,
-    input decisor_mux_escolhe_shift_right,
-    input decisor_mux_entrada_dois_ula,
     input decisor_mux_saida_big_ula,
     input decisor_shift_right_left,
     input subtrador_big_ula,
     input subtrador_Somador_subtrador, 
-    output reg [31:0] saida_registrador,
+    output reg [7:0] saida_registrador,
     output reg [31:0] saida_final
 );
 
@@ -268,12 +270,12 @@ module Datapath(
     //parte da esquerda
     Mux_2_8bits Expoentes1_2(.S0(input_1[30:23]), .S1(input_2[30:23]), .S(saida_mux_expoentes), .decisor(~Bmaior)); //escolhe o menor expoente
     Mux_2_8bits ExpoenteEscolhido_final(.S0(saida_mux_expoentes), .S1(saida_arredonda_expoente), .S(saida_mux_expoentes_escolhido), .decisor(decisor_mux_expoente_escolhido)); //falta coisa
-    Somador_subtrador incrementa_subtrai(.A(saida_segundo_mux), .subtrador(subtrador_Somador_subtrador), .resultado(saida_subtrador_somador));
+    Somador_subtrador incrementa_subtrai(.A(saida_segundo_mux), .subtrador(subtrador_Somador_subtrador), .n_shifts(tamanho3), .resultado(saida_subtrador_somador));
 
     //parte da direita
-    Mux_2_23bits escolhe_shift_right(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_shift_right), .decisor(decisor_mux_escolhe_shift_right));
+    Mux_2_23bits escolhe_shift_right(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_shift_right), .decisor(~Bmaior));
     Shift_Right direita(.entrada(saida_escolhe_shift_right), .saida(saida_shift_right), .tamanho(tamanho));
-    Mux_2_23bits escolhe_entrada_dois_ula(.S0({input_2[22:0], 3'd0}), .S1({input_1[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(decisor_mux_entrada_dois_ula));
+    Mux_2_23bits escolhe_entrada_dois_ula(.S0({input_2[22:0], 3'd0}), .S1({input_1[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(Bmaior));
     Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula), .decisor(soma_multiplica_big_ula), .subtrador(subtrador_big_ula));
 
     //parte da final
@@ -282,39 +284,67 @@ module Datapath(
     arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida_fraction(saida_arredonda_fracao), .expoente_saida(saida_arredonda_expoente), .clk(clk));
 
 
-assign saida_final = {signal, saida_arredonda_expoente, saida_arredonda_fracao};
+assign saida_final = {signal, saida_arredonda_expoente, saida_arredonda_fracao}; //falta calcular o signal
 
 endmodule
 
 
 module testbench();
+    reg clk,
+    reg [31:0] input_1,
+    reg [31:0] input_2,
+    reg [4:0] tamanho,
+    reg [4:0] tamanho2,
+    reg [7:0] tamanho3,
+    reg soma_multiplica_small_ula,
+    reg soma_multiplica_big_ula,
+    reg decisor_mux_expoente_escolhido,
+    reg decisor_mux_saida_big_ula,
+    reg decisor_shift_right_left,
+    reg subtrador_big_ula,
+    reg subtrador_Somador_subtrador, 
+    wire [7:0] saida_registrador,
+    wire [31:0] saida_final
 
-    reg clk;
-    reg [31:0] input_1;
-    reg [31:0] input_2;
-    reg decisor_mux_expoentes;
-    reg decisor_mux_expoente_escolhido;
-    reg decisor_mux_escolhe_shift_right;
-    reg decisor_mux_entrada_dois_ula;
-    reg decisor_mux_saida_big_ula;
-    reg decisor_shift_right_left;
-    reg subtrador_Somador_subtrador;
-    reg saida_registrador;
     
-    Datapath uut(input clk,
-      .input_1(input_1),
-      .input_2(input_2),
-      .decisor_mux_expoentes(decisor_mux_expoentes),
-      .decisor_mux_expoente_escolhido(decisor_mux_expoente_escolhido),
-      .decisor_mux_escolhe_shift_right(decisor_mux_escolhe_shift_right),
-      .decisor_mux_entrada_dois_ula(decisor_mux_entrada_dois_ula),
-      .decisor_mux_saida_big_ula(decisor_mux_saida_big_ula),
-      .decisor_shift_right_left(decisor_shift_right_left),
-      .subtrador_Somador_subtrador(subtrador_Somador_subtrador), 
-      .saida_registrador(saida_registrador)
-      );
+    Datapath dp(
+    .clk(clk),
+    .input_1(input_1),
+    .input_2(input_2),
+    .tamanho(tamanho),
+    .tamanho2(tamanho2),
+    .tamanho3(tamanho3),
+    .soma_multiplica_small_ula(soma_multiplica_small_ula),
+    .soma_multiplica_big_ula(soma_multiplica_big_ula),
+    .decisor_mux_expoente_escolhido(decisor_mux_expoentes_escolhido),
+    .decisor_mux_saida_big_ula(decisor_mux_saida_big_ula),
+    .decisor_shift_right_left(decisor_shift_right_left),
+    .subtrador_big_ula(subtrador_big_ula),
+    .subtrador_Somador_subtrador(subtrador_Somador_subtrador), 
+    .saida_registrador(saida_registrador),
+    .saida_final(saida_final)
+    );
+
+
 
     initial begin
+      //soma A=2 B=3
+
+      //set os inputs
+      input_1 = 32'd2;
+      input_2 = 32'd3;
+
+      #1;
+
+      //set os mux
+      decisor_mux_expoente_escolhido = 1'b0;
+
+      decisor_mux_saida_big_ula = 1'b0;
+
+      
+
+
+
     end
 
     always #5 clk= ~clk;

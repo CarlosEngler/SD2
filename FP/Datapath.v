@@ -115,8 +115,7 @@ endmodule
 
 module Somador_subtrador (
   input [7:0] A,
-  input [7:0] 
-  ,
+  input [7:0] n_shifts,
   input subtrador,
   output [7:0] resultado
 );
@@ -132,7 +131,7 @@ full_adder UUT(
     .NA({18'd0, A}),
     .NB({18'd0, B_final}),
     .carryIn(subtrador),
-    .soma_total(resultado23bits),ignal
+    .soma_total(resultado23bits),
     .lista_carryOut(lista_carryOut)
   );
 
@@ -198,6 +197,7 @@ endmodule
 module arredondamento(
     input clk,
     input [7:0] expoente,
+    input load,
     input [25:0] entrada,
     output [25:0] saida_fraction,
     output overflow,
@@ -210,8 +210,9 @@ wire [23:0] fraction;
 
 reg [7:0] exponent;
 
-assign exponent = expoente;
-
+always @(posedge load) begin 
+  exponent <= expoente;
+end
 
 assign fraction = (entrada[2:0] > 3'b100) ? (entrada[25:3] + 1) : (entrada[25:3] == 3'b100) ? ((entrada[3] == 1'b0) ? entrada[25:3] : (entrada[25:3] + 1)) : entrada[25:3];
 
@@ -227,6 +228,7 @@ endmodule
 
 module Datapath(
     input clk,
+    input load,
     input [31:0] input_1,
     input [31:0] input_2,
     input [4:0] tamanho,
@@ -238,9 +240,11 @@ module Datapath(
     input decisor_mux_saida_big_ula,
     input decisor_shift_right_left,
     input subtrador_big_ula,
-    input subtrador_Somador_subtrador, 
-    output reg [7:0] saida_registrador,
-    output reg [31:0] saida_final
+    input subtrador_Somador_subtrador,
+    output overflow, 
+    output [7:0] saida_registrador,
+    output [31:0] saida_final,
+    output [25:0] data_out_big_ula
 );
 
     wire [7:0] resultado;
@@ -270,41 +274,48 @@ module Datapath(
     //parte da esquerda
     Mux_2_8bits Expoentes1_2(.S0(input_1[30:23]), .S1(input_2[30:23]), .S(saida_mux_expoentes), .decisor(~Bmaior)); //escolhe o menor expoente
     Mux_2_8bits ExpoenteEscolhido_final(.S0(saida_mux_expoentes), .S1(saida_arredonda_expoente), .S(saida_mux_expoentes_escolhido), .decisor(decisor_mux_expoente_escolhido)); //falta coisa
-    Somador_subtrador incrementa_subtrai(.A(saida_segundo_mux), .subtrador(subtrador_Somador_subtrador), .n_shifts(tamanho3), .resultado(saida_subtrador_somador));
+    Somador_subtrador incrementa_subtrai(.A(saida_mux_expoentes_escolhido), .subtrador(subtrador_Somador_subtrador), .n_shifts(tamanho3), .resultado(saida_subtrador_somador));
 
     //parte da direita
     Mux_2_23bits escolhe_shift_right(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_shift_right), .decisor(~Bmaior));
     Shift_Right direita(.entrada(saida_escolhe_shift_right), .saida(saida_shift_right), .tamanho(tamanho));
-    Mux_2_23bits escolhe_entrada_dois_ula(.S0({input_2[22:0], 3'd0}), .S1({input_1[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(Bmaior));
+    Mux_2_23bits escolhe_entrada_dois_ula(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(Bmaior));
     Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula), .decisor(soma_multiplica_big_ula), .subtrador(subtrador_big_ula));
 
     //parte da final
     Mux_2_23bits saida_ula_grande(.S0(saida_big_ula), .S1(saida_arredonda_fracao), .S(mux_saida_big_ula), .decisor(decisor_mux_saida_big_ula)); //falta coisa
     Shift_Right_left direita_esquerda(.entrada(mux_saida_big_ula), .saida(saida_shift_right_left), .decisor(decisor_shift_right_left), .tamanho(tamanho2));
-    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida_fraction(saida_arredonda_fracao), .expoente_saida(saida_arredonda_expoente), .clk(clk));
+    arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida_fraction(saida_arredonda_fracao), .expoente_saida(saida_arredonda_expoente), .clk(clk), .overflow(overflow), .load(load));
 
 
-assign saida_final = {signal, saida_arredonda_expoente, saida_arredonda_fracao}; //falta calcular o signal
+assign saida_final = {input_1[31], saida_arredonda_expoente, saida_arredonda_fracao[25:3]};
+
+assign data_out_big_ula = saida_big_ula;
 
 endmodule
 
 
-module testbench();
-    reg clk,
-    reg [31:0] input_1,
-    reg [31:0] input_2,
-    reg [4:0] tamanho,
-    reg [4:0] tamanho2,
-    reg [7:0] tamanho3,
-    reg soma_multiplica_small_ula,
-    reg soma_multiplica_big_ula,
-    reg decisor_mux_expoente_escolhido,
-    reg decisor_mux_saida_big_ula,
-    reg decisor_shift_right_left,
-    reg subtrador_big_ula,
-    reg subtrador_Somador_subtrador, 
-    wire [7:0] saida_registrador,
-    wire [31:0] saida_final
+module testbench;
+    reg clk;
+    reg [7:0] auxiliar;
+    reg [31:0] input_1;
+    reg [31:0] input_2;
+    reg [4:0] tamanho;
+    reg [4:0] tamanho2;
+    reg [7:0] tamanho3;
+    reg soma_multiplica_small_ula;
+    reg soma_multiplica_big_ula;
+    reg decisor_mux_expoente_escolhido;
+    reg decisor_mux_saida_big_ula;
+    reg decisor_shift_right_left;
+    reg subtrador_big_ula;
+    reg subtrador_Somador_subtrador;
+    reg boolean;
+    wire overflow; 
+    wire [25:0] data_out_big_ula;
+    wire [7:0] saida_registrador;
+    wire [31:0] saida_final;
+    reg load;
 
     
     Datapath dp(
@@ -316,35 +327,94 @@ module testbench();
     .tamanho3(tamanho3),
     .soma_multiplica_small_ula(soma_multiplica_small_ula),
     .soma_multiplica_big_ula(soma_multiplica_big_ula),
-    .decisor_mux_expoente_escolhido(decisor_mux_expoentes_escolhido),
+    .decisor_mux_expoente_escolhido(decisor_mux_expoente_escolhido),
     .decisor_mux_saida_big_ula(decisor_mux_saida_big_ula),
     .decisor_shift_right_left(decisor_shift_right_left),
     .subtrador_big_ula(subtrador_big_ula),
     .subtrador_Somador_subtrador(subtrador_Somador_subtrador), 
     .saida_registrador(saida_registrador),
-    .saida_final(saida_final)
+    .saida_final(saida_final),
+    .overflow(overflow),
+    .data_out_big_ula(data_out_big_ula),
+    .load(load)
     );
 
-
+  integer i;
 
     initial begin
-      //soma A=2 B=3
+      $dumpfile("test.vcd");
+      $dumpvars(0, testbench);
+      
+      clk = 1'b0;
+      load = 1'b0;
 
       //set os inputs
-      input_1 = 32'd2;
-      input_2 = 32'd3;
+      input_1 = 32'b00000000000000000000000000000000;
+      input_2 = 32'b00000000000000000000000000000000;
+      // zero-multiplica, um-soma
+      soma_multiplica_small_ula = 1'b1;
 
-      #1;
+      #10;
+      $display("saida registrador", saida_registrador);
 
-      //set os mux
-      decisor_mux_expoente_escolhido = 1'b0;
+      //faz a equcao da big ula
+        #10;
+        //zero multiplica, um-soma
+        soma_multiplica_big_ula = 1'b1;
+        //zero-soma, um-subtrai
+        subtrador_big_ula = 1'b0;
+        tamanho = saida_registrador;
+        
+        #10;
+        $display("saida big ula %b", data_out_big_ula);
+      //pos operecao big_ula, normalizacao geral
+       #10;
+        auxiliar = 8'd0;
+        boolean = 1'b1;
+        for(i = 25; i >= 0; i = i - 1) begin
+          if(data_out_big_ula[i] == 0 && boolean)
+          begin
+            auxiliar = auxiliar + 1;
+          end
+          else boolean = 1'b0;
+        end
+        // pensa se deixa ou nao, if(auxiliar == 8'd26) auxiliar = 8'd0;
+        #10;
+        $display("auxiliar", auxiliar);
+        //normalizacao geral
+        #10;
+          decisor_mux_expoente_escolhido = 1'b0;
+          subtrador_Somador_subtrador = 1'b0; //0:soma , 1:subtrai
+          tamanho3 = saida_registrador;
+          #10;
+          load = 1'b1;
+          #10;
+          load = 1'b0;
 
-      decisor_mux_saida_big_ula = 1'b0;
+          #10;
+          //mux da esquerda
+          tamanho3 = auxiliar;
+          tamanho2 = auxiliar[4:0];
+          
+          #10;
+          decisor_mux_expoente_escolhido = 1'b1;
+          subtrador_Somador_subtrador = 1'b1; //0:soma , 1:subtrai
+          // mux da direita
+          decisor_mux_saida_big_ula = 1'b0;
+          decisor_shift_right_left = 1'b1;
 
-      
+          #10;
+          load = 1'b1;
+          #10;
+          load = 1'b0;
+
+        #10;
+        $display("sinal arredondado %b", saida_final);
 
 
 
+      #30;
+      $finish;
     end
 
     always #5 clk= ~clk;

@@ -19,3 +19,5 @@
  ## Bibliography
 
  - [Computer Organization and Design Risc-V Edition](http://home.ustc.edu.cn/~louwenqi/reference_books_tools/Computer%20Organization%20and%20Design%20RISC-V%20edition.pdf)
+ 
+ - https://www.h-schmidt.net/FloatConverter/IEEE754.html

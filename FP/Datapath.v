@@ -288,7 +288,9 @@ module Datapath(
     arredondamento arredonda(.expoente(saida_subtrador_somador), .entrada(saida_shift_right_left), .saida_fraction(saida_arredonda_fracao), .expoente_saida(saida_arredonda_expoente), .clk(clk), .overflow(overflow), .load(load));
 
 
-assign saida_final = {input_1[31], saida_arredonda_expoente, saida_arredonda_fracao[25:3]};
+assign saida_final[31] = input_1[31];
+assign saida_final[30:23] = saida_arredonda_expoente;
+assign saida_final[22:0] = saida_arredonda_fracao[25:3];
 
 assign data_out_big_ula = saida_big_ula;
 
@@ -349,18 +351,17 @@ module testbench;
       load = 1'b0;
 
       //set os inputs
-      input_1 = 32'b00000000000000000000000000000000;
-      input_2 = 32'b00000000000000000000000000000000;
+      input_1 = 32'b01000000001110011001100110011010;
+      input_2 = 32'b01000000000 100110011001100110011;
       // zero-multiplica, um-soma
       soma_multiplica_small_ula = 1'b1;
+      soma_multiplica_big_ula = 1'b1;
 
       #10;
       $display("saida registrador", saida_registrador);
 
       //faz a equcao da big ula
         #10;
-        //zero multiplica, um-soma
-        soma_multiplica_big_ula = 1'b1;
         //zero-soma, um-subtrai
         subtrador_big_ula = 1'b0;
         tamanho = saida_registrador;
@@ -371,13 +372,7 @@ module testbench;
        #10;
         auxiliar = 8'd0;
         boolean = 1'b1;
-        for(i = 25; i >= 0; i = i - 1) begin
-          if(data_out_big_ula[i] == 0 && boolean)
-          begin
-            auxiliar = auxiliar + 1;
-          end
-          else boolean = 1'b0;
-        end
+        
         // pensa se deixa ou nao, if(auxiliar == 8'd26) auxiliar = 8'd0;
         #10;
         $display("auxiliar", auxiliar);
@@ -419,3 +414,6 @@ module testbench;
 
     always #5 clk= ~clk;
 endmodule
+
+//teste 1 ->01000000110->01100110011001100110
+//teste 2 ->01000000000->11001100110011001101

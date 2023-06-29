@@ -214,13 +214,13 @@ always @(posedge load) begin
   exponent <= expoente;
 end
 
-assign fraction = (entrada[2:0] > 3'b100) ? (entrada[25:3] + 1) : (entrada[25:3] == 3'b100) ? ((entrada[3] == 1'b0) ? entrada[25:3] : (entrada[25:3] + 1)) : entrada[25:3];
+assign fraction = (entrada[1:0] > 2'b10) ? (entrada[24:2] + 1) : (entrada[1:0] == 2'b10) ? ((entrada[2] == 1'b0) ? entrada[24:2] : (entrada[24:2] + 1)) : entrada[24:2];
 
 assign overflow_auxiliar = fraction[23];
 
 assign overflow = fraction[23];
 
-assign saida_fraction = (overflow_auxiliar) ?  entrada : {fraction[22:0], 3'b000};
+assign saida_fraction = (overflow_auxiliar) ?  entrada : {entrada[25], fraction[22:0], 2'b00};
 
 assign expoente_saida = exponent;
 
@@ -290,7 +290,7 @@ module Datapath(
 
 assign saida_final[31] = input_1[31];
 assign saida_final[30:23] = saida_arredonda_expoente;
-assign saida_final[22:0] = saida_arredonda_fracao[25:3];
+assign saida_final[22:0] = saida_arredonda_fracao[24:2];
 
 assign data_out_big_ula = saida_big_ula;
 
@@ -351,8 +351,8 @@ module testbench;
       load = 1'b0;
 
       //set os inputs
-      input_1 = 32'b01000000001110011001100110011010;
-      input_2 = 32'b01000000000 100110011001100110011;
+      input_1 = 32'b01000000111001110101110000101001;
+      input_2 = 32'b01000000101110011110101110000101;
       // zero-multiplica, um-soma
       soma_multiplica_small_ula = 1'b1;
       soma_multiplica_big_ula = 1'b1;
@@ -372,10 +372,17 @@ module testbench;
        #10;
         auxiliar = 8'd0;
         boolean = 1'b1;
-        
-        // pensa se deixa ou nao, if(auxiliar == 8'd26) auxiliar = 8'd0;
+
+        for(i = 25; i >= 0; i = i - 1) begin
+          if(data_out_big_ula[i] == 0 && boolean)
+          begin
+            auxiliar = auxiliar + 1;
+          end
+          else boolean = 1'b0;
+        end
+        if(auxiliar != 8'd0) auxiliar = auxiliar - 1;
         #10;
-        $display("auxiliar", auxiliar);
+        $display("auxiliar %d", auxiliar);
         //normalizacao geral
         #10;
           decisor_mux_expoente_escolhido = 1'b0;
@@ -415,5 +422,5 @@ module testbench;
     always #5 clk= ~clk;
 endmodule
 
-//teste 1 ->01000000110->01100110011001100110
-//teste 2 ->01000000000->11001100110011001101
+//teste 1 ->0 10000010 01000011001100110011010
+//teste 2 ->0 01111110 01100110011001100111000

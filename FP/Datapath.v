@@ -50,11 +50,17 @@ module Big_ULA (
   input [25:0] B,
   input decisor,
   input subtrador,
-  output [25:0] resultado
+  output [25:0] resultado,
+  output [7:0] tamanhoShift,
+  output  directionShift
 );
 
   // se o decisor for 1 -> multiplicacao 0 -> é uma soma
   integer i;
+  reg [7:0] auxiliar;
+  reg [26:0] resultadoAuxiliar;
+  reg boolean;
+
   wire [25:0] resultado26bits;
   wire [25:0] lista_carryOut;
   wire [25:0] B_final;
@@ -76,8 +82,24 @@ module Big_ULA (
         if (B[i] == 1'b1) soma = soma + (A << i);
     end
   end
+
+  always@* begin
+    auxiliar = 8'd0;
+    boolean = 1'd1;
+    resultadoAuxiliar = {1'b1, resultado26bits};
+    if(lista_carryOut[25] == 1'b1) resultadoAuxiliar = resultadoAuxiliar >> 1;
+      for(i = 25; i >= 0; i = i - 1) begin
+        if(resultadoAuxiliar[i] == 0 && boolean)
+        begin
+          auxiliar = auxiliar + 1;
+        end
+        else boolean = 1'b0;
+      end
+  end
   
-  assign resultado = (decisor) ? resultado26bits : soma[47:25];
+  assign resultado = (decisor) ? resultadoAuxiliar[25:0] : soma[47:25];
+  assign tamanhoShift = auxiliar;
+  assign directionShift = lista_carryOut[25];
 
 endmodule
 
@@ -214,13 +236,13 @@ always @(posedge load) begin
   exponent <= expoente;
 end
 
-assign fraction = (entrada[1:0] > 2'b10) ? (entrada[24:2] + 1) : (entrada[1:0] == 2'b10) ? ((entrada[2] == 1'b0) ? entrada[24:2] : (entrada[24:2] + 1)) : entrada[24:2];
+assign fraction = (entrada[2:0] > 3'b100) ? (entrada[25:3] + 1) : (entrada[2:0] == 3'b100) ? ((entrada[3] == 1'b0) ? entrada[25:3] : (entrada[25:3] + 1)) : entrada[25:3];
 
 assign overflow_auxiliar = fraction[23];
 
 assign overflow = fraction[23];
 
-assign saida_fraction = (overflow_auxiliar) ?  entrada : {entrada[25], fraction[22:0], 2'b00};
+assign saida_fraction = (overflow_auxiliar) ?  entrada : {fraction[23:0], 2'b00};
 
 assign expoente_saida = exponent;
 
@@ -241,7 +263,9 @@ module Datapath(
     input decisor_shift_right_left,
     input subtrador_big_ula,
     input subtrador_Somador_subtrador,
-    output overflow, 
+    output overflow,
+    output directionShift,
+    output [7:0]tamanhoShift, 
     output [7:0] saida_registrador,
     output [31:0] saida_final,
     output [25:0] data_out_big_ula
@@ -280,7 +304,7 @@ module Datapath(
     Mux_2_23bits escolhe_shift_right(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_shift_right), .decisor(~Bmaior));
     Shift_Right direita(.entrada(saida_escolhe_shift_right), .saida(saida_shift_right), .tamanho(tamanho));
     Mux_2_23bits escolhe_entrada_dois_ula(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(Bmaior));
-    Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula), .decisor(soma_multiplica_big_ula), .subtrador(subtrador_big_ula));
+    Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula), .decisor(soma_multiplica_big_ula), .subtrador(subtrador_big_ula), .tamanhoShift(tamanhoShift), .directionShift(directionShift));
 
     //parte da final
     Mux_2_23bits saida_ula_grande(.S0(saida_big_ula), .S1(saida_arredonda_fracao), .S(mux_saida_big_ula), .decisor(decisor_mux_saida_big_ula)); //falta coisa
@@ -314,6 +338,8 @@ module testbench;
     reg subtrador_Somador_subtrador;
     reg boolean;
     wire overflow; 
+    wire directionShift;
+    wire [7:0] tamanhoShift;
     wire [25:0] data_out_big_ula;
     wire [7:0] saida_registrador;
     wire [31:0] saida_final;
@@ -338,7 +364,9 @@ module testbench;
     .saida_final(saida_final),
     .overflow(overflow),
     .data_out_big_ula(data_out_big_ula),
-    .load(load)
+    .load(load),
+    .tamanhoShift(tamanhoShift),
+    .directionShift(directionShift)
     );
 
   integer i;
@@ -351,8 +379,8 @@ module testbench;
       load = 1'b0;
 
       //set os inputs
-      input_1 = 32'b01000000111001110101110000101001;
-      input_2 = 32'b01000000101110011110101110000101;
+      input_1 = 32'b01000000111001000010100011110110;
+      input_2 = 32'b01000001010000111010111000010100;
       // zero-multiplica, um-soma
       soma_multiplica_small_ula = 1'b1;
       soma_multiplica_big_ula = 1'b1;
@@ -369,20 +397,6 @@ module testbench;
         #10;
         $display("saida big ula %b", data_out_big_ula);
       //pos operecao big_ula, normalizacao geral
-       #10;
-        auxiliar = 8'd0;
-        boolean = 1'b1;
-
-        for(i = 25; i >= 0; i = i - 1) begin
-          if(data_out_big_ula[i] == 0 && boolean)
-          begin
-            auxiliar = auxiliar + 1;
-          end
-          else boolean = 1'b0;
-        end
-        if(auxiliar != 8'd0) auxiliar = auxiliar - 1;
-        #10;
-        $display("auxiliar %d", auxiliar);
         //normalizacao geral
         #10;
           decisor_mux_expoente_escolhido = 1'b0;
@@ -395,16 +409,27 @@ module testbench;
 
           #10;
           //mux da esquerda
-          tamanho3 = auxiliar;
-          tamanho2 = auxiliar[4:0];
+              tamanho3 = tamanhoShift - directionShift;
+              tamanho2 = tamanhoShift[4:0] - directionShift;
           
           #10;
           decisor_mux_expoente_escolhido = 1'b1;
           subtrador_Somador_subtrador = 1'b1; //0:soma , 1:subtrai
           // mux da direita
           decisor_mux_saida_big_ula = 1'b0;
-          decisor_shift_right_left = 1'b1;
+          decisor_shift_right_left = directionShift;
 
+          #10;
+          load = 1'b1;
+          #10;
+          load = 1'b0;
+          
+          #10; // gambiarra monstruosa, dando shift right, muitos casos deram certo
+          subtrador_Somador_subtrador = 1'b0; //0:soma , 1:subtrai
+          tamanho3 = 8'd1;
+          tamanho2 = 5'd1;
+          decisor_shift_right_left = 1'b0;
+          
           #10;
           load = 1'b1;
           #10;
@@ -421,6 +446,5 @@ module testbench;
 
     always #5 clk= ~clk;
 endmodule
-
-//teste 1 ->0 10000010 01000011001100110011010
-//teste 2 ->0 01111110 01100110011001100111000
+//teste 0 100 000 10 00101100110011001100110
+//teste 0 100 000 01 001011001100110011001100

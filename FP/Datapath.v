@@ -1,4 +1,4 @@
-module half_adder ( //somador de 1 bit
+ module half_adder ( //somador de 1 bit
   input A,
   input B,
   input carryIn,
@@ -258,8 +258,6 @@ module Datapath(
     wire [31:0] saida_arredondamento;
     wire [7:0] saida_arredonda_expoente;
     wire [25:0] saida_arredonda_fracao;
-
-
 
     Small_Ula pequena(.A(input_1[30:23]), .B(input_2[30:23]), .resultado(resultado), .subtrador(soma_multiplica_small_ula), .Bmaior(Bmaior)); //retorna a diferenca de exponet no caso da soma, e soma expoente no caso da multiplicação, alem de retornar qual input tinha maior expoente
     registrador ula_pequena(.clk(clk), .entrada(resultado), .saida(saida_registrador));

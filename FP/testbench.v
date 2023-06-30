@@ -170,3 +170,155 @@ module testbench;
 
     always #5 clk= ~clk;
 endmodule
+
+                           if (aux) begin
+                                operation_increment <= 0;
+                                shift_RL <= 2'd2;
+                                increment <= 1'b1;
+                                aux <= 0;
+                            end
+                            else if (result_ula[25]) begin
+                                operation_increment <= 0;
+                                shift_RL <= 1'd1;
+                                increment <= 1'b1;
+                            end
+                            else if (result_ula[24]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 2'd2;
+                                increment <= 1'b0;
+                            end
+                        end
+                        else begin
+                            if (result_ula[24] | aux) begin
+                                operation_increment <= 0;
+                                shift_RL <= 2'd2;
+                                increment <= 1'b1;
+                                aux <= 0;
+                            end
+                            else if (result_ula[23]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 2'd3;
+                                increment <= 1'b0;
+                            end
+                            else if (result_ula[22]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 3'd4;
+                                increment <= 1'b1;
+                            end
+                            else if (result_ula[21]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 3'd5;
+                                increment <= 2'd2;
+                            end
+                            else if (result_ula[20]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 3'd6;
+                                increment <= 2'd3;
+                            end
+                            else if (result_ula[19]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 3'd7;
+                                increment <= 3'd4;
+                            end
+                            else if (result_ula[18]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 4'd8;
+                                increment <= 3'd5;
+                            end
+                            else if (result_ula[17]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 4'd9;
+                                increment <= 3'd6;
+                            end
+                            else if (result_ula[16]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 4'd10;
+                                increment <= 3'd7;
+                            end
+                            else if (result_ula[15]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 4'd11;
+                                increment <= 4'd8;
+                            end
+                            else if (result_ula[14]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 4'd12;
+                                increment <= 4'd9;
+                            end
+                            else if (result_ula[13]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 4'd13;
+                                increment <= 4'd10;
+                            end
+                            else if (result_ula[12]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 4'd14;
+                                increment <= 4'd11;
+                            end
+                            else if (result_ula[11]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 4'd15;
+                                increment <= 4'd12;
+                            end
+                            else if (result_ula[10]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd16;
+                                increment <= 4'd13;
+                            end
+                            else if (result_ula[9]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd17;
+                                increment <= 4'd14;
+                            end
+                            else if (result_ula[8]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd18;
+                                increment <= 4'd15;
+                            end
+                            else if (result_ula[7]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd19;
+                                increment <= 5'd16;
+                            end
+                            else if (result_ula[6]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd20;
+                                increment <= 5'd17;
+                            end
+                            else if (result_ula[5]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd21;
+                                increment <= 5'd18;
+                            end
+                            else if (result_ula[4]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd22;
+                                increment <= 5'd19;
+                            end
+                            else if (result_ula[3]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd23;
+                                increment <= 5'd20;
+                            end
+                            else if (result_ula[2]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd24;
+                                increment <= 5'd21;
+                            end
+                            else if (result_ula[1]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd25;
+                                increment <= 5'd22;
+                            end
+                            else if (result_ula[0]) begin
+                                operation_increment <= 1;
+                                shift_RL <= 5'd26;
+                                increment <= 5'd23;
+                            end
+                            else begin
+                                operation_increment <= 1;
+                                shift_RL <= 1'b0;
+                                increment <= 1'b0;
+                            end
+                        end
+                        next_state <= ROUND;

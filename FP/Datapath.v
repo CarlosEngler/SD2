@@ -12,11 +12,11 @@ assign carryOut = (A & B) | (A & carryIn) | (B & carryIn);
 endmodule
 
 module full_adder ( 
-  input [25:0] NA,
-  input [25:0] NB,
+  input [27:0] NA,
+  input [27:0] NB,
   input carryIn,
-  output [25:0] soma_total,
-  output [25:0] lista_carryOut
+  output [27:0] soma_total,
+  output [27:0] lista_carryOut
 );
 
  half_adder UUT(
@@ -30,7 +30,7 @@ module full_adder (
 generate
   genvar i;
  
-    for (i=1; i < 26; i = i+1) begin
+    for (i=1; i < 28; i = i+1) begin
         half_adder UUX(
         .A(NA[i]),
         .B(NB[i]),
@@ -46,27 +46,26 @@ endmodule
 //-----------------ULAS----------------
 
 module Big_ULA (
-  input [25:0] A,
-  input [25:0] B,
+  input [27:0] A,
+  input [27:0] B,
   input decisor,
   input subtrador,
-  output [25:0] resultado,
+  output [27:0] resultado,
   output [7:0] tamanhoShift,
-  output  directionShift
 );
 
   // se o decisor for 1 -> multiplicacao 0 -> é uma soma
   integer i;
   reg [7:0] auxiliar;
-  reg [26:0] resultadoAuxiliar;
+  reg [28:0] resultadoAuxiliar;
   reg boolean;
 
-  wire [25:0] resultado26bits;
-  wire [25:0] lista_carryOut;
-  wire [25:0] B_final;
+  wire [27:0] resultado26bits;
+  wire [27:0] lista_carryOut;
+  wire [27:0] B_final;
   reg [47:0] soma;
 
-  assign B_final = (B != 26'd0 && subtrador == 1'b1) ? ~B : B;
+  assign B_final = (B != 28'd0 && subtrador == 1'b1) ? ~B : B;
 
   full_adder UUT(
         .NA(A),
@@ -88,8 +87,7 @@ module Big_ULA (
   always@* begin
     auxiliar = 8'd0;
     boolean = 1'd1;
-    resultadoAuxiliar = {1'b1, resultado26bits};
-    if(lista_carryOut[25] == 1'b1) resultadoAuxiliar = resultadoAuxiliar >> 1;
+    resultadoAuxiliar = resultado26bits;
       for(i = 25; i >= 0; i = i - 1) begin
         if(resultadoAuxiliar[i] == 0 && boolean)
         begin
@@ -99,9 +97,8 @@ module Big_ULA (
       end
   end
   
-  assign resultado = (decisor) ? resultadoAuxiliar[25:0] : soma[47:25];
+  assign resultado = (decisor) ? resultadoAuxiliar[27:0] : soma[47:25];
   assign tamanhoShift = auxiliar;
-  assign directionShift = lista_carryOut[25];
 
 endmodule
 
@@ -116,8 +113,8 @@ module Small_Ula (
     wire menor_valor;
     wire [7:0] inverte;
     wire [7:0] entrada_A;
-    wire [25:0] resultado23bits;
-    wire [25:0] lista_carryOut;
+    wire [27:0] resultado23bits;
+    wire [27:0] lista_carryOut;
 
     assign menor_valor = (A < B) ? 1 : 0;
 
@@ -125,8 +122,8 @@ module Small_Ula (
     assign inverte = (!subtrador) ? ((menor_valor) ? A : B) : ((menor_valor) ? ~A : ~B);
 
         full_adder UUT(
-        .NA({18'd0, entrada_A}),
-        .NB({18'd0, inverte}),
+        .NA({20'd0, entrada_A}),
+        .NB({20'd0, inverte}),
         .carryIn(subtrador),
         .soma_total(resultado23bits),
         .lista_carryOut(lista_carryOut)
@@ -152,8 +149,8 @@ assign B_final = (subtrador) ? ~n_shifts : n_shifts; // inverte bits para a subt
 
 // somador
 full_adder UUT(
-    .NA({18'd0, A}),
-    .NB({18'd0, B_final}),
+    .NA({20'd0, A}),
+    .NB({20'd0, B_final}),
     .carryIn(subtrador),
     .soma_total(resultado23bits),
     .lista_carryOut(lista_carryOut)
@@ -164,13 +161,25 @@ full_adder UUT(
 endmodule
 
 module Mux_2_23bits (
-  input [25:0] S1,
-  input [25:0] S0,
+  input [27:0] S1,
+  input [27:0] S0,
   input decisor,
-  output [25:0] S
+  output [27:0] S
 );
   // mux que decide S1 se decisor = 1 e S0 se for igual a zero
   assign S = decisor ? S1 : S0;
+
+endmodule
+
+module Mux_3_8bits (
+  input [27:0] S1,
+  input [27:0] S0,
+  input [27:0] S2
+  input [1:0] decisor,
+  output [27:0] S
+);
+  //S0 00 // S1 01 // S2 10
+  assign S = (decisor[1]) ? S2 : ((decisor[0]) ? S1 : S0);
 
 endmodule
 
@@ -199,9 +208,9 @@ module registrador(
 endmodule
 
 module Shift_Right(
-    input [25:0] entrada,
+    input [27:0] entrada,
     input [4:0] tamanho,
-    output [25:0] saida
+    output [27:0] saida
 );
 
     assign saida = entrada>>tamanho;
@@ -209,10 +218,10 @@ module Shift_Right(
 endmodule
 
 module Shift_Right_left(
-    input [25:0] entrada,
+    input [27:0] entrada,
     input [4:0] tamanho,
     input decisor,
-    output [25:0] saida
+    output [27:0] saida
 );
     assign saida = (decisor) ? entrada<<tamanho : entrada>>tamanho;
                                 //esquerda              //direita
@@ -222,8 +231,8 @@ module arredondamento(
     input clk,
     input [7:0] expoente,
     input load,
-    input [25:0] entrada,
-    output [25:0] saida_fraction,
+    input [27:0] entrada,
+    output [27:0] saida_fraction,
     output overflow,
     output [7:0] expoente_saida
 );
@@ -244,7 +253,7 @@ assign overflow_auxiliar = fraction[23];
 
 assign overflow = fraction[23];
 
-assign saida_fraction = (overflow_auxiliar) ?  entrada : {fraction[23:0], 2'b00}; 
+assign saida_fraction = (overflow_auxiliar) ?  entrada : {2'b00, fraction[22:0], 3'b000}; 
 
 assign expoente_saida = exponent;
 
@@ -260,17 +269,16 @@ module Datapath(
     input [7:0] tamanho3,
     input soma_multiplica_small_ula,
     input soma_multiplica_big_ula,
-    input decisor_mux_expoente_escolhido,
+    input [1:0] decisor_mux_expoente_escolhido,
     input decisor_mux_saida_big_ula,
     input decisor_shift_right_left,
     input subtrador_big_ula,
     input subtrador_Somador_subtrador,
     output overflow,
-    output directionShift,
     output [7:0]tamanhoShift, 
     output [7:0] saida_registrador,
     output [31:0] saida_final,
-    output [25:0] data_out_big_ula
+    output [27:0] data_out_big_ula
 );
 
     wire [7:0] resultado;
@@ -279,14 +287,14 @@ module Datapath(
     wire [7:0] saida_mux_expoentes_escolhido;
     wire [7:0] saida_subtrador_somador;
 
-    wire[25:0] saida_escolhe_shift_right;
-    wire[25:0] saida_escolhe_entrada_dois_ula;
-    wire[25:0] saida_shift_right;
+    wire[27:0] saida_escolhe_shift_right;
+    wire[27:0] saida_escolhe_entrada_dois_ula;
+    wire[27:0] saida_shift_right;
 
-    wire[25:0] saida_big_ula;
-    wire[25:0] mux_saida_big_ula;
+    wire[27:0] saida_big_ula;
+    wire[27:0] mux_saida_big_ula;
 
-    wire[25:0] saida_shift_right_left;
+    wire[27:0] saida_shift_right_left;
 
     wire [31:0] saida_arredondamento;
     wire [7:0] saida_arredonda_expoente;
@@ -298,14 +306,14 @@ module Datapath(
 
     //parte da esquerda
     Mux_2_8bits Expoentes1_2(.S0(input_1[30:23]), .S1(input_2[30:23]), .S(saida_mux_expoentes), .decisor(~Bmaior)); //escolhe o menor expoente
-    Mux_2_8bits ExpoenteEscolhido_final(.S0(saida_mux_expoentes), .S1(saida_arredonda_expoente), .S(saida_mux_expoentes_escolhido), .decisor(decisor_mux_expoente_escolhido)); //falta coisa
+    Mux_3_8bits ExpoenteEscolhido_final(.S0(saida_mux_expoentes), .S1(saida_arredonda_expoente), .S(saida_mux_expoentes_escolhido), .decisor(decisor_mux_expoente_escolhido)); //falta coisa
     Somador_subtrador incrementa_subtrai(.A(saida_mux_expoentes_escolhido), .subtrador(subtrador_Somador_subtrador), .n_shifts(tamanho3), .resultado(saida_subtrador_somador));
 
     //parte da direita
-    Mux_2_23bits escolhe_shift_right(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_shift_right), .decisor(~Bmaior));
+    Mux_2_23bits escolhe_shift_right(.S0({2'b01, input_1[22:0], 3'd0}), .S1({2'b01, input_2[22:0], 3'd0}), .S(saida_escolhe_shift_right), .decisor(~Bmaior));
     Shift_Right direita(.entrada(saida_escolhe_shift_right), .saida(saida_shift_right), .tamanho(tamanho));
-    Mux_2_23bits escolhe_entrada_dois_ula(.S0({input_1[22:0], 3'd0}), .S1({input_2[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(Bmaior));
-    Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula), .decisor(soma_multiplica_big_ula), .subtrador(subtrador_big_ula), .tamanhoShift(tamanhoShift), .directionShift(directionShift));
+    Mux_2_23bits escolhe_entrada_dois_ula(.S0({2'b01, input_1[22:0], 3'd0}), .S1({2'b01, input_2[22:0], 3'd0}), .S(saida_escolhe_entrada_dois_ula), .decisor(Bmaior));
+    Big_ULA grande_ula(.A(saida_shift_right), .B(saida_escolhe_entrada_dois_ula), .resultado(saida_big_ula), .decisor(soma_multiplica_big_ula), .subtrador(subtrador_big_ula), .tamanhoShift(tamanhoShift));
 
     //parte da final
     Mux_2_23bits saida_ula_grande(.S0(saida_big_ula), .S1(saida_arredonda_fracao), .S(mux_saida_big_ula), .decisor(decisor_mux_saida_big_ula)); //falta coisa
@@ -315,62 +323,64 @@ module Datapath(
 
 assign saida_final[31] = input_1[31];
 assign saida_final[30:23] = saida_arredonda_expoente;
-assign saida_final[22:0] = saida_arredonda_fracao[24:2];
+assign saida_final[22:0] = saida_arredonda_fracao[25:3];
 
 assign data_out_big_ula = saida_big_ula;
 
 endmodule
 
-
-// PROBLEMAS: ajustar o signal na multiplicação,  -> fazer isso na uc, é apenas um xor
-
-module uc_2 (
+module UC (
     input clk,
+    input rst,
+    input start,
     input [31:0] input_1,
     input [31:0] input_2,
-    output [7:0] tamanho_incrementa_decrementa;
+    input add_or_mul,
+    input overflow_roundign_hardware,
+    input [7:0] tamanhoShift,
+    input [27:0] data_out_big_ula,
+    input [7:0] saida_registrador,
+    output [7:0] tamanho_incrementa_decrementa,
     output [4:0] tamanho_shift_right_left, 
-    output [4:0] tamanho_shift_right;
+    output [4:0] tamanho_shift_right,
     output soma_multiplica_small_ula,
     output soma_multiplica_big_ula,
-    output decisor_mux_expoente_escolhido,
+    output [1:0] decisor_mux_expoente_escolhido,
     output decisor_mux_saida_big_ula,
     output decisor_shift_right_left, // descobre se da shift right ou left
     output subtrador_big_ula,
     output subtrador_incrementa_decrementa,
-    output operacao,
     output load_rouding_hardware,
     output done,
-    input overflow_roundign_hardware, 
-    input directionShift,
-    input [7:0] tamanhoShift,
-    input [25:0] data_out_big_ula,
-    input [7:0] saida_registrador,
-    input [31:0] saida_final
+    output sinal
     );
 
     reg [3:0] state;
     reg [3:0] next_state;
-    reg aux, mul;
+    // reg aux, mul;
 
-    reg write_enable, increment_mux, small_number_mux, ula_mux, enable, enable_2, operation_increment, its_over;
+    reg [1:0] increment_mux;
+    reg exit_ula_mux, enable, operation_increment, its_over;
+    reg operation_shift;
+    reg big_ula_operation;
 
     reg [7:0] increment;
     reg [4:0] shift_R, shift_RL;
 
-    parameter RESET = 3'd0, EXPONENTS_DIFFERENCE = 3'd1, MULTIPLY_OR_ADD = 3'd2, 
-              NORMALIZE = 3'd3, ROUND = 3'd4, SIGN = 3'd5;
+    parameter RESET = 3'b000, DIFERENCA_EXPOENTE = 3'b001, OPERATION = 3'b010, 
+              NORMALIZACAO = 3'b011, ARREDONDAMENTO = 3'b100, SINAL = 3'b101;
 
     assign decisor_mux_expoente_escolhido = increment_mux;
-    assign decisor_mux_saida_big_ula =  ula_mux;
+    assign decisor_mux_saida_big_ula =  exit_ula_mux;
 
-    assign round_enable = enable_2;
-    assign exp_enable = enable;
-    assign decisor_shift_right_left = operation_increment;
+    assign load_rouding_hardware = enable;
+    assign decisor_shift_right_left = operation_shift;
     assign tamanho_shift_right_left = shift_RL;
     assign tamanho_shift_right = shift_R;
+
     assign tamanho_incrementa_decrementa = increment;
-    assign rst_mul = mul;
+    assign subtrador_incrementa_decrementa = operation_increment;
+    assign subtrador_big_ula = big_ula_operation;
     assign done = its_over;
 
 
@@ -383,231 +393,100 @@ module uc_2 (
         end
     end
 
-    always@ (state or clk or round or start)
+    always@ (state or clk or start)
         begin
             case (state)
                 RESET:
                     begin
-                        increment_mux <= 0;
-                        small_number_mux <= 0;
+                        increment_mux <= 2'd0;
                         ula_mux <= 0;
                         enable <= 0;
                         shift_R <= 0;
                         shift_RL <= 0;
                         operation_increment <= 0;
-                        aux <= 0;
-                        mul <= 0;
                         its_over <= 0;
 
-                        next_state <= EXPONENTS_DIFFERENCE;
+                        next_state <= DIFERENCA_EXPOENTE;
                     end
-                EXPONENTS_DIFFERENCE:
+                DIFERENCA_EXPOENTE:
                     begin
-                        increment_mux <= 0;
-                        small_number_mux <= 0;
-                        ula_mux <= 0;
+                        increment_mux <= 2'd0;
+                        exit_ula_mux <= 0;
                         shift_R <= 0;
                         shift_RL <= 0;
                         operation_increment <= 0;
                         its_over <= 0;
 
                         if (start) begin
-                            enable <= 1;
-                            mul <= 1;
                             next_state <= MULTIPLY_OR_ADD;
                         end
                     end
-                MULTIPLY_OR_ADD:
+                OPERATION:
                     begin
                         if (!add_or_mul) begin
-                            if (exponent_difference[7]) begin
-                                small_number_mux <= 0;
-                                shift_R <= exponent_difference*(-1);
-                            end
-                            else begin
-                                small_number_mux <= 1;
-                                shift_R <= exponent_difference;
-                            end
-                            enable <= 0;
-                            mul <= 0;
+                          big_ula_operation = 1'b0; //zero-soma, um-multiplica
+                          shift_R = saida_registrador;
+                        end
+                        else begin
+                          big_ula_operation = 1'b1;
+                          shift_R <= 8'd0;
+                        end
+                        enable <= 1'b1;
+                        next_state <= NORMALIZACAO;
+                    end
+                NORMALIZACAO:
+                    begin
+                        enable <= 1'b0;
+                        if(!add_or_mul) increment_mux <= 2'd1;
+                        else increment_mux <= 2'd2; 
+                        exit_ula_mux = 1'b0;
+                        if (data_out_big_ula[27:26] == 2'b11 || data_out_big_ula[27:26] == 2'b10) begin
+                          //shift
+                          shift_RL = 5'd1;
+                          operation_shift = 1'b0;
+                          //somador
+                          increment = 8'd1;
+                          operation_increment = 1'b0;
+                        end else if(data_out_big_ula[27:26] == 2'b00) begin
+                          //shitf -> left
+                          shift_RL = tamanhoShift[4:0];
+                          operation_shift = 1'b1;
+                          //subtrador
+                          increment = tamanhoShift;
+                          operation_increment = 1'b1;
+                        end
+                        else begin
+                          // não faz nada
+                          shift_RL = 8'd0;
+                          operation_shift = 1'b0;
+                          increment = 8'd0;
+                          operation_increment = 1'b0;
+                        end
+                        next_state <= ARREDONDAMENTO;
+                    end
+                ARREDONDAMENTO:
+                    begin
+                        enable <= 1;
+                        if (overflow_roundign_hardware) begin
+                            increment_mux <= 2'd1;
+                            exit_ula_mux <= 1;
                             next_state <= NORMALIZE;
                         end
                         else begin
-                            enable <= 0;
-                            mul <= 0;
-                            if (done_mul) next_state <= NORMALIZE;
-                            else next_state <= MULTIPLY_OR_ADD;
+                            next_state <= SINAL;
                         end
                     end
-                NORMALIZE:
-                    begin
-                        if (add_or_mul) begin
-                            if (aux) begin
-                                operation_increment <= 0;
-                                shift_RL <= 2'd2;
-                                increment <= 1'b1;
-                                aux <= 0;
-                            end
-                            else if (result_ula[25]) begin
-                                operation_increment <= 0;
-                                shift_RL <= 1'd1;
-                                increment <= 1'b1;
-                            end
-                            else if (result_ula[24]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 2'd2;
-                                increment <= 1'b0;
-                            end
-                        end
-                        else begin
-                            if (result_ula[24] | aux) begin
-                                operation_increment <= 0;
-                                shift_RL <= 2'd2;
-                                increment <= 1'b1;
-                                aux <= 0;
-                            end
-                            else if (result_ula[23]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 2'd3;
-                                increment <= 1'b0;
-                            end
-                            else if (result_ula[22]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 3'd4;
-                                increment <= 1'b1;
-                            end
-                            else if (result_ula[21]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 3'd5;
-                                increment <= 2'd2;
-                            end
-                            else if (result_ula[20]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 3'd6;
-                                increment <= 2'd3;
-                            end
-                            else if (result_ula[19]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 3'd7;
-                                increment <= 3'd4;
-                            end
-                            else if (result_ula[18]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 4'd8;
-                                increment <= 3'd5;
-                            end
-                            else if (result_ula[17]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 4'd9;
-                                increment <= 3'd6;
-                            end
-                            else if (result_ula[16]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 4'd10;
-                                increment <= 3'd7;
-                            end
-                            else if (result_ula[15]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 4'd11;
-                                increment <= 4'd8;
-                            end
-                            else if (result_ula[14]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 4'd12;
-                                increment <= 4'd9;
-                            end
-                            else if (result_ula[13]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 4'd13;
-                                increment <= 4'd10;
-                            end
-                            else if (result_ula[12]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 4'd14;
-                                increment <= 4'd11;
-                            end
-                            else if (result_ula[11]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 4'd15;
-                                increment <= 4'd12;
-                            end
-                            else if (result_ula[10]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd16;
-                                increment <= 4'd13;
-                            end
-                            else if (result_ula[9]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd17;
-                                increment <= 4'd14;
-                            end
-                            else if (result_ula[8]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd18;
-                                increment <= 4'd15;
-                            end
-                            else if (result_ula[7]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd19;
-                                increment <= 5'd16;
-                            end
-                            else if (result_ula[6]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd20;
-                                increment <= 5'd17;
-                            end
-                            else if (result_ula[5]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd21;
-                                increment <= 5'd18;
-                            end
-                            else if (result_ula[4]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd22;
-                                increment <= 5'd19;
-                            end
-                            else if (result_ula[3]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd23;
-                                increment <= 5'd20;
-                            end
-                            else if (result_ula[2]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd24;
-                                increment <= 5'd21;
-                            end
-                            else if (result_ula[1]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd25;
-                                increment <= 5'd22;
-                            end
-                            else if (result_ula[0]) begin
-                                operation_increment <= 1;
-                                shift_RL <= 5'd26;
-                                increment <= 5'd23;
-                            end
-                            else begin
-                                operation_increment <= 1;
-                                shift_RL <= 1'b0;
-                                increment <= 1'b0;
-                            end
-                        end
-                        next_state <= ROUND;
+                SINAL:
+                  begin
+                    if(!add_or_mul) begin
+                      sinal = input_1[31];
                     end
-                ROUND:
-                    begin
-                        enable_2 <= 1;
-                        if (round) begin
-                            increment_mux <= 1;
-                            ula_mux <= 1;
-                            next_state <= NORMALIZE;
-                            aux <= 1;
-                        end
-                        else begin
-                            next_state <= EXPONENTS_DIFFERENCE;
-                            its_over <= 1;
-                        end
+                    else begin
+                      sinal = (input_1[31] ^ input_2[31]);
                     end
+                    next_state <= DIFERENCA_EXPOENTE;
+                    its_over <= 1;
+                  end
             endcase
         end 
 
@@ -615,5 +494,6 @@ endmodule
 
 
 //corrigir datapath
+//normalizacao
 // fazer a testbench
 // olhar a testebench

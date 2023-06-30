@@ -76,6 +76,7 @@ module Big_ULA (
         .lista_carryOut(lista_carryOut)
   );
 
+//multiplicador
   always @* begin
     soma = 48'd0;
     for(i = 3; i < 26; i = i + 1) begin
@@ -83,6 +84,7 @@ module Big_ULA (
     end
   end
 
+//normalizador soma
   always@* begin
     auxiliar = 8'd0;
     boolean = 1'd1;
@@ -242,7 +244,7 @@ assign overflow_auxiliar = fraction[23];
 
 assign overflow = fraction[23];
 
-assign saida_fraction = (overflow_auxiliar) ?  entrada : {fraction[23:0], 2'b00};
+assign saida_fraction = (overflow_auxiliar) ?  entrada : {fraction[23:0], 2'b00}; 
 
 assign expoente_saida = exponent;
 
@@ -379,8 +381,8 @@ module testbench;
       load = 1'b0;
 
       //set os inputs
-      input_1 = 32'b01000000111001000010100011110110;
-      input_2 = 32'b01000001010000111010111000010100;
+      input_1 = 32'b01000001100011000000000010000000;
+      input_2 = 32'b01000001000000000001010000000100;
       // zero-multiplica, um-soma
       soma_multiplica_small_ula = 1'b1;
       soma_multiplica_big_ula = 1'b1;
@@ -396,7 +398,8 @@ module testbench;
         
         #10;
         $display("saida big ula %b", data_out_big_ula);
-      //pos operecao big_ula, normalizacao geral
+      //pos operecao big_ula
+
         //normalizacao geral
         #10;
           decisor_mux_expoente_escolhido = 1'b0;
@@ -415,8 +418,9 @@ module testbench;
           #10;
           decisor_mux_expoente_escolhido = 1'b1;
           subtrador_Somador_subtrador = 1'b1; //0:soma , 1:subtrai
+
           // mux da direita
-          decisor_mux_saida_big_ula = 1'b0;
+          decisor_mux_saida_big_ula = 1'b0; //0 = big ula, 1 = arredondamento
           decisor_shift_right_left = directionShift;
 
           #10;
@@ -428,12 +432,35 @@ module testbench;
           subtrador_Somador_subtrador = 1'b0; //0:soma , 1:subtrai
           tamanho3 = 8'd1;
           tamanho2 = 5'd1;
-          decisor_shift_right_left = 1'b0;
+          decisor_shift_right_left = 1'b0;    // 1 = shift left, 0 = shift right
           
           #10;
           load = 1'b1;
           #10;
           load = 1'b0;
+
+
+          //caso overflow no rounding -> joga o número original pro shift_right_left e da um shift right, consequentemente soma 1 no expoente
+          if(overflow)
+          begin
+          decisor_mux_saida_big_ula = 1'b1; //shift right left recebe fração do arredonda
+          decisor_shift_right_left = 1'b0; //shift right
+          tamanho2 = 5'd1;
+
+
+          decisor_mux_expoente_escolhido = 1'b1; //inc dec recebe expoente arredondado
+          subtrador_Somador_subtrador = 1'b0; //0:soma , 1:subtrai
+          tamanho3 = 8'd1; //soma 1 no expoente
+
+          #10;
+          load = 1'b1;
+          #10;
+          load = 1'b0;
+          end
+
+
+          //multiplicação
+
 
         #10;
         $display("sinal arredondado %b", saida_final);
@@ -446,5 +473,8 @@ module testbench;
 
     always #5 clk= ~clk;
 endmodule
-//teste 0 100 000 10 00101100110011001100110
-//teste 0 100 000 01 001011001100110011001100
+//teste 01000001100011000000000000000000
+//teste 01000001100111000000000000000000
+
+
+// PROBLEMAS: ajustar o signal na multiplicação, 

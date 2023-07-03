@@ -493,7 +493,3 @@ module UC (
 endmodule
 
 
-//corrigir datapath
-//normalizacao
-// fazer a testbench
-// olhar a testebench
